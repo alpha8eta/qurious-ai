@@ -10,7 +10,8 @@ import { Chat } from '@/lib/types'
 import {
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  useSidebar
 } from '@/components/ui/sidebar'
 
 import { Spinner } from '../ui/spinner'
@@ -54,6 +55,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { isMobile, setOpenMobile, setOpen } = useSidebar()
 
   // Fetch chat messages when expanded and extract user queries
   useEffect(() => {
@@ -81,12 +83,17 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
         
         if (chat.messages && Array.isArray(chat.messages)) {
           chat.messages.forEach((message: any) => {
-            if (message.role === 'user' && message.content) {
-              userQueries.push({
-                id: message.id,
-                content: getPreviewText(message.content),
-                timestamp: message.createdAt ? new Date(message.createdAt) : undefined
-              })
+            if (message.role === 'user' && message.content && message.id) {
+              const previewText = getPreviewText(message.content)
+              
+              // Only include messages with valid IDs and non-empty content
+              if (previewText.trim()) {
+                userQueries.push({
+                  id: message.id,
+                  content: previewText,
+                  timestamp: message.createdAt ? new Date(message.createdAt) : undefined
+                })
+              }
             }
           })
         }
@@ -107,13 +114,27 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
 
   // Function to navigate to specific query in chat
   const handleQueryClick = (queryId: string) => {
+    // Skip if query ID is undefined or empty
+    if (!queryId) {
+      console.warn('Cannot navigate to query with undefined or empty ID')
+      return
+    }
+
+    // Close the sidebar before navigation
+    if (isMobile) {
+      setOpenMobile(false)
+    } else {
+      setOpen(false)
+    }
+
     const chatPath = `/search/${chatId}`
     
     if (pathname !== chatPath) {
       // Navigate to chat with hash for the section
       router.push(`${chatPath}#section-${queryId}`)
     } else {
-      // Already on the chat page, just scroll to the section
+      // Already on the chat page, update hash and scroll to the section
+      router.replace(`${chatPath}#section-${queryId}`)
       scrollToQuery(queryId)
     }
   }
