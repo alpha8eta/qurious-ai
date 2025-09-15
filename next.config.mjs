@@ -1,5 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Allow all hosts for Replit environment
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          }
+        ]
+      }
+    ]
+  },
+  // Enable experimental features for better dev experience in Replit
+  experimental: {
+    allowedOrigins: ['*']
+  },
   images: {
     remotePatterns: [
       {
