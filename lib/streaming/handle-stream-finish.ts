@@ -84,20 +84,31 @@ export async function handleStreamFinish({
     // }
 
     // Get the chat from the database if it exists, otherwise create a new one
+    const now = new Date()
     const savedChat = (await getChat(chatId, userId)) ?? {
       messages: [],
-      createdAt: new Date(),
+      createdAt: now,
       userId: userId,
       path: `/search/${chatId}`,
       title: originalMessages[0].content,
-      id: chatId
+      id: chatId,
+      // Threading fields - defaults for new root chats
+      parentId: null,
+      rootId: chatId,
+      depth: 0,
+      childrenCount: 0,
+      lastActivityAt: now,
+      updatedAt: now
     }
 
     // Save chat with complete response and related questions
     await saveChat(
       {
         ...savedChat,
-        messages: generatedMessages
+        messages: generatedMessages,
+        // Update timestamps on save
+        lastActivityAt: now,
+        updatedAt: now
       },
       userId
     ).catch(error => {

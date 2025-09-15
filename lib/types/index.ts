@@ -65,6 +65,13 @@ export interface Chat extends Record<string, any> {
   path: string
   messages: ExtendedCoreMessage[] // Note: Changed from AIMessage to ExtendedCoreMessage
   sharePath?: string
+  // Threading support fields
+  parentId: string | null // ID of parent chat, null for root chats
+  rootId: string // ID of the root chat in the thread hierarchy
+  depth: number // Depth in thread hierarchy (0 for root, 1 for direct children, etc.)
+  childrenCount: number // Number of direct child chats
+  lastActivityAt: Date // Last activity timestamp for thread ordering
+  updatedAt: Date // Last update timestamp
 }
 
 // ExtendedCoreMessage for saveing annotations
@@ -112,4 +119,24 @@ export type SearXNGSearchResults = {
   results: SearchResultItem[]
   number_of_results?: number
   query: string
+}
+
+// Threading support types
+export interface ThreadNode {
+  chat: Chat
+  children?: ThreadNode[]
+}
+
+export interface ChatPageResponse {
+  chats: Chat[]
+  nextOffset: number | null
+}
+
+export interface ThreadHierarchy {
+  roots: Chat[]
+  nextOffset: number | null
+}
+
+export interface ChatAncestors {
+  ancestors: Chat[] // Array from root to parent (excludes current chat)
 }

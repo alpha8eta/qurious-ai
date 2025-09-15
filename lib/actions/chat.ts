@@ -15,6 +15,23 @@ function getUserChatKey(userId: string) {
   return `user:${CHAT_VERSION}:chat:${userId}`
 }
 
+// Helper function to normalize chat objects with threading fields for backward compatibility
+function normalizeChatThreading(chat: any): Chat {
+  const now = new Date()
+  return {
+    ...chat,
+    // Ensure threading fields exist with sensible defaults and proper types
+    parentId: chat.parentId ?? null,
+    rootId: chat.rootId ?? chat.id,
+    depth: Number.isFinite(Number(chat.depth)) ? Number(chat.depth) : 0,
+    childrenCount: Number.isFinite(Number(chat.childrenCount)) ? Number(chat.childrenCount) : 0,
+    lastActivityAt: chat.lastActivityAt ? new Date(chat.lastActivityAt) : chat.createdAt ? new Date(chat.createdAt) : now,
+    updatedAt: chat.updatedAt ? new Date(chat.updatedAt) : chat.createdAt ? new Date(chat.createdAt) : now,
+    // Ensure createdAt is a Date object
+    createdAt: chat.createdAt ? new Date(chat.createdAt) : now
+  } as Chat
+}
+
 export async function getChats(userId?: string | null) {
   if (!userId) {
     return []
@@ -53,10 +70,8 @@ export async function getChats(userId?: string | null) {
             plainChat.messages = []
           }
         }
-        if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
-        }
-        return plainChat as Chat
+        // Normalize with threading support and date conversion
+        return normalizeChatThreading(plainChat)
       })
   } catch (error) {
     return []
@@ -105,10 +120,8 @@ export async function getChatsPage(
             plainChat.messages = []
           }
         }
-        if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
-        }
-        return plainChat as Chat
+        // Normalize with threading support and date conversion
+        return normalizeChatThreading(plainChat)
       })
 
     const nextOffset = chatKeys.length === limit ? offset + limit : null
@@ -141,7 +154,8 @@ export async function getChat(id: string, userId: string = 'anonymous') {
     chat.messages = []
   }
 
-  return chat
+  // Normalize with threading support and date conversion
+  return normalizeChatThreading(chat)
 }
 
 export async function clearChats(
@@ -206,14 +220,22 @@ export async function saveChat(chat: Chat, userId: string = 'anonymous') {
   try {
     const redis = await getRedis()
     const pipeline = redis.pipeline()
+    const now = new Date()
 
+    // Ensure timestamps are set and serialize dates to ISO strings for consistent storage
     const chatToSave = {
       ...chat,
-      messages: JSON.stringify(chat.messages)
+      messages: JSON.stringify(chat.messages),
+      // Serialize Date objects to ISO strings for reliable storage and parsing
+      createdAt: chat.createdAt ? chat.createdAt.toISOString() : now.toISOString(),
+      updatedAt: chat.updatedAt ? chat.updatedAt.toISOString() : now.toISOString(),
+      lastActivityAt: chat.lastActivityAt ? chat.lastActivityAt.toISOString() : now.toISOString()
     }
 
     pipeline.hmset(`chat:${chat.id}`, chatToSave)
-    pipeline.zadd(getUserChatKey(userId), Date.now(), `chat:${chat.id}`)
+    // Use lastActivityAt for thread ordering instead of Date.now()
+    const sortScore = chat.lastActivityAt ? chat.lastActivityAt.getTime() : now.getTime()
+    pipeline.zadd(getUserChatKey(userId), sortScore, `chat:${chat.id}`)
 
     const results = await pipeline.exec()
 
@@ -231,7 +253,22 @@ export async function getSharedChat(id: string) {
     return null
   }
 
-  return chat
+  // Parse the messages if they're stored as a string
+  if (typeof chat.messages === 'string') {
+    try {
+      chat.messages = JSON.parse(chat.messages)
+    } catch (error) {
+      chat.messages = []
+    }
+  }
+
+  // Ensure messages is always an array
+  if (!Array.isArray(chat.messages)) {
+    chat.messages = []
+  }
+
+  // Normalize with threading support and date conversion
+  return normalizeChatThreading(chat)
 }
 
 export async function shareChat(id: string, userId: string = 'anonymous') {
