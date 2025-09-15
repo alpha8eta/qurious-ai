@@ -148,18 +148,23 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
       return
     }
 
-    // Close the sidebar before navigation
-    if (isMobile) {
-      setOpenMobile(false)
-    } else {
-      setOpen(false)
-    }
-
     const chatPath = `/search/${chatId}`
     const targetUrl = `${chatPath}#section-${queryId}`
     
-    console.log('Query clicked - navigating to:', targetUrl)
-    
+    // Close the sidebar before navigation
+    if (isMobile) {
+      setOpenMobile(false)
+      // Add a delay to ensure mobile sidebar closes before navigation
+      setTimeout(() => {
+        navigateToQuery(targetUrl, chatPath, queryId)
+      }, 250)
+    } else {
+      setOpen(false)
+      navigateToQuery(targetUrl, chatPath, queryId)
+    }
+  }
+
+  const navigateToQuery = (targetUrl: string, chatPath: string, queryId: string) => {
     if (pathname !== chatPath) {
       // Navigate to different chat page with hash, preserving SPA behavior
       router.push(targetUrl, { scroll: false })
