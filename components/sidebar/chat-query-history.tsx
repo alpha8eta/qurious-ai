@@ -71,9 +71,18 @@ const getPreviewText = (content: any): string => {
 export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) {
   const [queries, setQueries] = useState<QueryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState('')
   const pathname = usePathname()
   const router = useRouter()
   const { isMobile, setOpenMobile, setOpen } = useSidebar()
+
+  // Track URL changes to show hash in debug info
+  useEffect(() => {
+    const updateUrl = () => setCurrentUrl(window.location.href)
+    updateUrl()
+    window.addEventListener('hashchange', updateUrl)
+    return () => window.removeEventListener('hashchange', updateUrl)
+  }, [])
 
   // Fetch chat messages when expanded and extract user queries
   useEffect(() => {
@@ -147,13 +156,16 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
     }
 
     const chatPath = `/search/${chatId}`
+    const targetUrl = `${chatPath}#section-${queryId}`
+    
+    console.log('Query clicked - navigating to:', targetUrl)
     
     if (pathname !== chatPath) {
-      // Navigate to chat with hash for the section
-      router.push(`${chatPath}#section-${queryId}`)
+      // Navigate to different chat page with hash, preserving SPA behavior
+      router.push(targetUrl, { scroll: false })
     } else {
-      // Already on the chat page, update hash and scroll to the section
-      router.replace(`${chatPath}#section-${queryId}`)
+      // Already on the chat page, update hash and scroll
+      window.location.hash = `section-${queryId}`
       scrollToQuery(queryId)
     }
   }
@@ -206,6 +218,14 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
       ) : (
         <div className="py-2 pl-4 text-xs text-muted-foreground">
           No queries found
+        </div>
+      )}
+      
+      {/* Debug URL display to verify hash is set correctly */}
+      {process.env.NODE_ENV === 'development' && currentUrl && (
+        <div className="mt-2 p-2 text-xs bg-gray-100 dark:bg-gray-800 rounded text-muted-foreground border-t border-sidebar-border/50">
+          <div className="font-semibold mb-1">Current URL:</div>
+          <div className="break-all">{currentUrl}</div>
         </div>
       )}
     </div>
