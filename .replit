@@ -37,6 +37,10 @@ externalPort = 80
 localPort = 33567
 externalPort = 3000
 
+[[ports]]
+localPort = 42681
+externalPort = 3001
+
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bun", "start"]

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Morphic is an AI-powered search engine with a generative UI built on Next.js. The application provides intelligent search capabilities with multiple providers (Tavily, SearXNG, Exa) and presents results through AI-generated interfaces. Users can interact with different AI models, view detailed search results, and manage chat history with optional authentication through Supabase.
+Qurious AI is an AI-powered search engine with a generative UI built on Next.js. The application provides intelligent search capabilities with multiple providers (Tavily, SearXNG, Exa) and presents results through AI-generated interfaces. Users can interact with different AI models, view detailed search results, and manage chat history with optional authentication through Supabase.
 
 ## User Preferences
 
