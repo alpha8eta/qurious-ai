@@ -19,7 +19,37 @@ const DEFAULT_MODEL: Model = {
 
 export async function POST(req: Request) {
   try {
-    const { messages, id: chatId } = await req.json()
+    console.log('=== API CHAT DEBUG ===')
+    console.log('Request URL:', req.url)
+    console.log('Request method:', req.method)
+    console.log('Content-Type:', req.headers.get('content-type'))
+    console.log('Request body size:', req.headers.get('content-length'))
+    
+    const bodyText = await req.text()
+    console.log('Raw body:', bodyText)
+    console.log('Body length:', bodyText.length)
+    
+    if (!bodyText || bodyText.trim() === '') {
+      console.error('Empty request body received')
+      return new Response('Empty request body', {
+        status: 400,
+        statusText: 'Bad Request'
+      })
+    }
+    
+    let parsedBody
+    try {
+      parsedBody = JSON.parse(bodyText)
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      console.error('Body that failed to parse:', bodyText)
+      return new Response('Invalid JSON in request body', {
+        status: 400,
+        statusText: 'Bad Request'
+      })
+    }
+    
+    const { messages, id: chatId } = parsedBody
     const referer = req.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     const userId = await getCurrentUserId()

@@ -33,10 +33,6 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 42681
-externalPort = 3001
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bun", "start"]
