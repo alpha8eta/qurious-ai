@@ -74,6 +74,7 @@ export function Chat({
   const sections = useMemo<ChatSection[]>(() => {
     const result: ChatSection[] = []
     let currentSection: ChatSection | null = null
+    let userIndex = 0
 
     for (const message of messages) {
       if (message.role === 'user') {
@@ -81,11 +82,16 @@ export function Chat({
         if (currentSection) {
           result.push(currentSection)
         }
+        
+        // Create canonical anchor ID - use message.id or fallback to u-{userIndex}
+        const anchorId = message.id ?? `u-${userIndex}`
+        
         currentSection = {
-          id: message.id,
+          id: anchorId,
           userMessage: message,
           assistantMessages: []
         }
+        userIndex++
       } else if (currentSection && message.role === 'assistant') {
         // Add assistant message to the current section
         currentSection.assistantMessages.push(message)

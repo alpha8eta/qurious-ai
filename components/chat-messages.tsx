@@ -57,24 +57,36 @@ export function ChatMessages({
     }
   }, [sections])
 
-  // Handle hash-based navigation after sections are rendered
+  // Handle hash-based navigation after sections are rendered and on hash changes
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.location.hash) return
-    
-    const hash = window.location.hash.slice(1)
-    const element = document.getElementById(hash)
-    
-    if (element) {
-      // Small delay to ensure the element is fully rendered
-      setTimeout(() => {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        
-        // Add highlight effect
-        element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+    const handleHashNavigation = () => {
+      if (typeof window === 'undefined' || !window.location.hash) return
+      
+      const hash = window.location.hash.slice(1)
+      const element = document.getElementById(hash)
+      
+      if (element) {
+        // Small delay to ensure the element is fully rendered
         setTimeout(() => {
-          element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
-        }, 2000)
-      }, 100)
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          
+          // Add highlight effect
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
+          }, 2000)
+        }, 100)
+      }
+    }
+
+    // Handle initial hash on mount and when sections change
+    handleHashNavigation()
+
+    // Listen for hash changes for same-page navigation
+    window.addEventListener('hashchange', handleHashNavigation)
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashNavigation)
     }
   }, [sections.length])
 
@@ -153,7 +165,7 @@ export function ChatMessages({
         {sections.map((section, sectionIndex) => (
           <div
             key={section.id}
-            id={`section-${section.userMessage.id}`}
+            id={`section-${section.id}`}
             className="chat-section mb-8"
             style={
               sectionIndex === sections.length - 1

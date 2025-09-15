@@ -75,6 +75,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
   const router = useRouter()
   const { isMobile, setOpenMobile, setOpen } = useSidebar()
 
+
   // Fetch chat messages when expanded and extract user queries
   useEffect(() => {
     if (!isExpanded || !chatId) return
@@ -92,11 +93,12 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
 
         const chat: Chat = await response.json()
         
-        // Extract user queries from messages - use very permissive approach
+        // Extract user queries from messages - use canonical anchor IDs that match chat sections
         const userQueries: QueryItem[] = []
+        let userIndex = 0
         
         if (chat.messages && Array.isArray(chat.messages)) {
-          chat.messages.forEach((message: any, index: number) => {
+          chat.messages.forEach((message: any) => {
             // Match user messages with proper role checking
             const isUserMessage = message.role === 'user' || 
                                  message.role === 'human' ||
@@ -107,12 +109,15 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
               const content = getPreviewText(message.content)
               
               if (content && content.trim().length > 0) {
+                // Use canonical anchor ID - same logic as in chat.tsx section builder
+                const queryId = message.id ?? `u-${userIndex}`
                 userQueries.push({
-                  id: message.id || `query-${index}`,
+                  id: queryId,
                   content: content.trim(),
                   timestamp: message.createdAt || message.timestamp ? new Date(message.createdAt || message.timestamp) : undefined
                 })
               }
+              userIndex++
             }
           })
         }
@@ -167,7 +172,8 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
   }
 
   const scrollToQuery = (queryId: string) => {
-    const element = document.getElementById(`section-${queryId}`)
+    const targetId = `section-${queryId}`
+    const element = document.getElementById(targetId)
     if (element) {
       element.scrollIntoView({ 
         behavior: 'smooth', 
