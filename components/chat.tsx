@@ -138,12 +138,14 @@ export function Chat({
     if (isCurrentChat && sections.length > 0) {
       const lastMessage = messages[messages.length - 1]
       if (lastMessage && lastMessage.role === 'user') {
-        // If the last message is from user, find the corresponding section
-        const sectionId = lastMessage.id
-        requestAnimationFrame(() => {
-          const sectionElement = document.getElementById(`section-${sectionId}`)
-          sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        })
+        // If the last message is from user, find the corresponding section and use its canonical ID
+        const lastSection = sections[sections.length - 1]
+        if (lastSection) {
+          requestAnimationFrame(() => {
+            const sectionElement = document.getElementById(`section-${lastSection.id}`)
+            sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          })
+        }
       }
     }
   }, [sections, messages, id])
