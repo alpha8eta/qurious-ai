@@ -93,6 +93,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
 
         const chat: Chat = await response.json()
         
+        
         // Extract user queries from messages - use canonical anchor IDs that match chat sections
         const userQueries: QueryItem[] = []
         let userIndex = 0

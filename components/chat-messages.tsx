@@ -57,38 +57,80 @@ export function ChatMessages({
     }
   }, [sections])
 
-  // Handle hash-based navigation after sections are rendered and on hash changes
+  // Handle initial hash navigation when sections are first rendered
   useEffect(() => {
-    const handleHashNavigation = () => {
+    if (sections.length === 0 || typeof window === 'undefined') return
+    
+    const handleInitialHashNavigation = () => {
+      if (!window.location.hash) return
+      
+      const hash = window.location.hash.slice(1)
+      let element = document.getElementById(hash)
+      
+      // If direct hash lookup fails, try to find by section index for fallback compatibility
+      if (!element && hash.startsWith('section-u-')) {
+        const userIndex = parseInt(hash.replace('section-u-', ''))
+        if (!isNaN(userIndex)) {
+          const allSections = document.querySelectorAll('[id^="section-"]')
+          if (allSections[userIndex]) {
+            element = allSections[userIndex] as HTMLElement
+          }
+        }
+      }
+      
+      if (!element) {
+        return
+      }
+      // Delay to ensure elements are rendered and positioned
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        
+        // Add highlight effect
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
+        }, 2000)
+      }, 200)
+    }
+
+    // Handle initial hash after a short delay to ensure DOM is ready
+    const timer = setTimeout(handleInitialHashNavigation, 300)
+    return () => clearTimeout(timer)
+  }, [sections.length])
+
+  // Handle hashchange events for same-page navigation  
+  useEffect(() => {
+    const handleHashChange = () => {
       if (typeof window === 'undefined' || !window.location.hash) return
       
       const hash = window.location.hash.slice(1)
-      const element = document.getElementById(hash)
+      let element = document.getElementById(hash)
+      
+      // If direct hash lookup fails, try to find by section index for fallback compatibility
+      if (!element && hash.startsWith('section-u-')) {
+        const userIndex = parseInt(hash.replace('section-u-', ''))
+        if (!isNaN(userIndex)) {
+          const allSections = document.querySelectorAll('[id^="section-"]')
+          if (allSections[userIndex]) {
+            element = allSections[userIndex] as HTMLElement
+          }
+        }
+      }
       
       if (element) {
-        // Small delay to ensure the element is fully rendered
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        
+        // Add highlight effect
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          
-          // Add highlight effect
-          element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
-          setTimeout(() => {
-            element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
-          }, 2000)
-        }, 100)
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
+        }, 2000)
       }
     }
 
-    // Handle initial hash on mount and when sections change
-    handleHashNavigation()
-
-    // Listen for hash changes for same-page navigation
-    window.addEventListener('hashchange', handleHashNavigation)
-    
-    return () => {
-      window.removeEventListener('hashchange', handleHashNavigation)
-    }
-  }, [sections.length])
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
 
   // get last tool data for manual tool call
   const lastToolData = useMemo(() => {
