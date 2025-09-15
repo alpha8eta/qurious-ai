@@ -83,14 +83,14 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
         
         if (chat.messages && Array.isArray(chat.messages)) {
           chat.messages.forEach((message: any) => {
-            if (message.role === 'user' && message.content && message.id) {
+            if (message.role === 'user' && message.content) {
               const previewText = getPreviewText(message.content)
               
-              // Only include messages with valid IDs and non-empty content
-              if (previewText.trim()) {
+              // Only include messages with valid IDs - use a fallback for content
+              if (message.id && (previewText || typeof message.content === 'string')) {
                 userQueries.push({
                   id: message.id,
-                  content: previewText,
+                  content: previewText || (typeof message.content === 'string' ? message.content : 'Query'),
                   timestamp: message.createdAt ? new Date(message.createdAt) : undefined
                 })
               }
