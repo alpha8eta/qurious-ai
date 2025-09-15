@@ -29,6 +29,26 @@ interface QueryItem {
 // Simple in-memory cache for chat queries
 const queryCache = new Map<string, QueryItem[]>()
 
+// Helper function to extract readable text from various content formats
+const getPreviewText = (content: any): string => {
+  if (typeof content === 'string') return content
+  
+  if (Array.isArray(content)) {
+    return content
+      .map((c: any) => typeof c === 'string' ? c : (c?.text ?? c?.content ?? ''))
+      .filter(Boolean)
+      .join(' ')
+      .trim()
+  }
+  
+  if (content && typeof content === 'object') {
+    if (typeof content.text === 'string') return content.text
+    if (Array.isArray((content as any).content)) return getPreviewText((content as any).content)
+  }
+  
+  return ''
+}
+
 export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) {
   const [queries, setQueries] = useState<QueryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -64,9 +84,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
             if (message.role === 'user' && message.content) {
               userQueries.push({
                 id: message.id,
-                content: typeof message.content === 'string' 
-                  ? message.content 
-                  : message.content.text || JSON.stringify(message.content),
+                content: getPreviewText(message.content),
                 timestamp: message.createdAt ? new Date(message.createdAt) : undefined
               })
             }

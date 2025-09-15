@@ -57,6 +57,27 @@ export function ChatMessages({
     }
   }, [sections])
 
+  // Handle hash-based navigation after sections are rendered
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.location.hash) return
+    
+    const hash = window.location.hash.slice(1)
+    const element = document.getElementById(hash)
+    
+    if (element) {
+      // Small delay to ensure the element is fully rendered
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        
+        // Add highlight effect
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
+        }, 2000)
+      }, 100)
+    }
+  }, [sections.length])
+
   // get last tool data for manual tool call
   const lastToolData = useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return null
@@ -132,7 +153,7 @@ export function ChatMessages({
         {sections.map((section, sectionIndex) => (
           <div
             key={section.id}
-            id={`section-${section.id}`}
+            id={`section-${section.userMessage.id}`}
             className="chat-section mb-8"
             style={
               sectionIndex === sections.length - 1
