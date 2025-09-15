@@ -21,6 +21,9 @@ export async function GET(
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
     }
 
+    // Basic API logging for monitoring
+    console.log(`[API] Returning chat ${chatId} with ${chat.messages?.length || 0} messages`)
+
     return NextResponse.json(chat)
   } catch (error) {
     console.error(`API route error getting chat ${chatId}:`, error)

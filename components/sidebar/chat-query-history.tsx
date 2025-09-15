@@ -30,21 +30,36 @@ interface QueryItem {
 // Simple in-memory cache for chat queries
 const queryCache = new Map<string, QueryItem[]>()
 
-// Helper function to extract readable text from various content formats
+// Helper function to extract readable text from AI SDK CoreMessage content formats
 const getPreviewText = (content: any): string => {
+  // Handle string content (simple case)
   if (typeof content === 'string') return content
   
+  // Handle array content (CoreMessage format)
   if (Array.isArray(content)) {
     return content
-      .map((c: any) => typeof c === 'string' ? c : (c?.text ?? c?.content ?? ''))
+      .map((item: any) => {
+        // Handle AI SDK content items with type and text properties
+        if (item && typeof item === 'object' && item.type === 'text' && item.text) {
+          return item.text
+        }
+        // Fallback for string items or other text content
+        if (typeof item === 'string') return item
+        if (item?.text) return item.text
+        if (item?.content) return item.content
+        return ''
+      })
       .filter(Boolean)
       .join(' ')
       .trim()
   }
   
+  // Handle object content with direct text property
   if (content && typeof content === 'object') {
     if (typeof content.text === 'string') return content.text
-    if (Array.isArray((content as any).content)) return getPreviewText((content as any).content)
+    if (typeof content.content === 'string') return content.content
+    // Handle nested array content
+    if (Array.isArray(content.content)) return getPreviewText(content.content)
   }
   
   return ''
@@ -61,12 +76,8 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
   useEffect(() => {
     if (!isExpanded || !chatId) return
 
-    // Check cache first
-    const cachedQueries = queryCache.get(chatId)
-    if (cachedQueries) {
-      setQueries(cachedQueries)
-      return
-    }
+    // Clear cache to avoid persisting empty results
+    queryCache.delete(chatId)
 
     const fetchQueries = async () => {
       setIsLoading(true)
@@ -78,20 +89,25 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
 
         const chat: Chat = await response.json()
         
-        // Extract user queries from messages
+        // Extract user queries from messages - use very permissive approach
         const userQueries: QueryItem[] = []
         
         if (chat.messages && Array.isArray(chat.messages)) {
-          chat.messages.forEach((message: any) => {
-            if (message.role === 'user' && message.content) {
-              const previewText = getPreviewText(message.content)
+          chat.messages.forEach((message: any, index: number) => {
+            // Match user messages with proper role checking
+            const isUserMessage = message.role === 'user' || 
+                                 message.role === 'human' ||
+                                 (typeof message.role === 'string' && message.role.toLowerCase().includes('user'))
+            
+            if (isUserMessage) {
+              // Extract content using improved parsing for AI SDK CoreMessage format
+              const content = getPreviewText(message.content)
               
-              // Only include messages with valid IDs - use a fallback for content
-              if (message.id && (previewText || typeof message.content === 'string')) {
+              if (content && content.trim().length > 0) {
                 userQueries.push({
-                  id: message.id,
-                  content: previewText || (typeof message.content === 'string' ? message.content : 'Query'),
-                  timestamp: message.createdAt ? new Date(message.createdAt) : undefined
+                  id: message.id || `query-${index}`,
+                  content: content.trim(),
+                  timestamp: message.createdAt || message.timestamp ? new Date(message.createdAt || message.timestamp) : undefined
                 })
               }
             }
