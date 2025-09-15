@@ -27,8 +27,11 @@ interface QueryItem {
   timestamp?: Date
 }
 
-// Simple in-memory cache for chat queries
+// Simple in-memory cache for chat queries (cleared on each session)
 const queryCache = new Map<string, QueryItem[]>()
+
+// Clear all cached queries on component load to ensure fresh data
+queryCache.clear()
 
 // Helper function to extract readable text from AI SDK CoreMessage content formats
 const getPreviewText = (content: any): string => {
