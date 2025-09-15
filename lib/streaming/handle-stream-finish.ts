@@ -31,32 +31,43 @@ export async function handleStreamFinish({
     let allAnnotations = [...annotations]
 
     if (!skipRelatedQuestions) {
-      // Notify related questions loading
-      const relatedQuestionsAnnotation: JSONValue = {
-        type: 'related-questions',
-        data: { items: [] }
-      }
-      dataStream.writeMessageAnnotation(relatedQuestionsAnnotation)
-
-      // Generate related questions
-      const relatedQuestions = await generateRelatedQuestions(
-        responseMessages,
-        model
-      )
-
-      // Create and add related questions annotation
-      const updatedRelatedQuestionsAnnotation: ExtendedCoreMessage = {
-        role: 'data',
-        content: {
+      try {
+        // Notify related questions loading
+        const relatedQuestionsAnnotation: JSONValue = {
           type: 'related-questions',
-          data: relatedQuestions.object
-        } as JSONValue
-      }
+          data: { items: [] }
+        }
+        dataStream.writeMessageAnnotation(relatedQuestionsAnnotation)
 
-      dataStream.writeMessageAnnotation(
-        updatedRelatedQuestionsAnnotation.content as JSONValue
-      )
-      allAnnotations.push(updatedRelatedQuestionsAnnotation)
+        // Generate related questions
+        const relatedQuestions = await generateRelatedQuestions(
+          responseMessages,
+          model
+        )
+
+        // Create and add related questions annotation
+        const updatedRelatedQuestionsAnnotation: ExtendedCoreMessage = {
+          role: 'data',
+          content: {
+            type: 'related-questions',
+            data: relatedQuestions.object
+          } as JSONValue
+        }
+
+        dataStream.writeMessageAnnotation(
+          updatedRelatedQuestionsAnnotation.content as JSONValue
+        )
+        allAnnotations.push(updatedRelatedQuestionsAnnotation)
+      } catch (error) {
+        console.error('Failed to generate related questions:', error)
+        // Continue with chat saving even if related questions fail
+        // Send empty related questions as fallback
+        const fallbackAnnotation: JSONValue = {
+          type: 'related-questions',
+          data: { items: [] }
+        }
+        dataStream.writeMessageAnnotation(fallbackAnnotation)
+      }
     }
 
     // Create the message to save
@@ -67,9 +78,10 @@ export async function handleStreamFinish({
       ...responseMessages.slice(-1)
     ] as ExtendedCoreMessage[]
 
-    if (process.env.ENABLE_SAVE_CHAT_HISTORY !== 'true') {
-      return
-    }
+    // Always enable chat history saving in development
+    // if (process.env.ENABLE_SAVE_CHAT_HISTORY !== 'true') {
+    //   return
+    // }
 
     // Get the chat from the database if it exists, otherwise create a new one
     const savedChat = (await getChat(chatId, userId)) ?? {
