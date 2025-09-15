@@ -1,7 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { deleteChat } from '@/lib/actions/chat'
+import { deleteChat, getChat } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const chatId = (await params).id
+  if (!chatId) {
+    return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 })
+  }
+
+  const userId = await getCurrentUserId()
+
+  try {
+    const chat = await getChat(chatId, userId)
+
+    if (!chat) {
+      return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(chat)
+  } catch (error) {
+    console.error(`API route error getting chat ${chatId}:`, error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function DELETE(
   request: NextRequest,

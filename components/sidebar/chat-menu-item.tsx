@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
-import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { ChevronDown, MoreHorizontal, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Chat } from '@/lib/types'
@@ -31,8 +31,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible'
 
 import { Spinner } from '../ui/spinner'
+import { ChatQueryHistory } from './chat-query-history'
 
 interface ChatMenuItemProps {
   chat: Chat
@@ -83,6 +89,7 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
   const [isPending, startTransition] = useTransition()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(isActive)
 
   const onDelete = () => {
     startTransition(async () => {
@@ -114,20 +121,41 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        isActive={isActive}
-        className="h-auto flex-col gap-0.5 items-start p-2 pr-8"
-      >
-        <Link href={chat.path}>
-          <div className="text-xs font-medium truncate select-none w-full">
-            {chat.title}
-          </div>
-          <div className="text-xs text-muted-foreground w-full">
-            {formatDateWithTime(chat.createdAt)}
-          </div>
-        </Link>
-      </SidebarMenuButton>
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <div className="flex items-center w-full relative">
+          <SidebarMenuButton
+            asChild
+            isActive={isActive}
+            className="h-auto flex-col gap-0.5 items-start p-2 pr-12"
+          >
+            <Link href={chat.path}>
+              <div className="text-xs font-medium truncate select-none w-full">
+                {chat.title}
+              </div>
+              <div className="text-xs text-muted-foreground w-full">
+                {formatDateWithTime(chat.createdAt)}
+              </div>
+            </Link>
+          </SidebarMenuButton>
+          
+          <CollapsibleTrigger asChild>
+            <SidebarMenuAction 
+              className="size-6 p-1 mr-7"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+            >
+              <ChevronDown 
+                size={14} 
+                className={`transition-transform duration-200 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`} 
+              />
+              <span className="sr-only">Toggle queries</span>
+            </SidebarMenuAction>
+          </CollapsibleTrigger>
 
       <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger asChild>
@@ -187,6 +215,12 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
           </AlertDialog>
         </DropdownMenuContent>
       </DropdownMenu>
+        </div>
+        
+        <CollapsibleContent>
+          <ChatQueryHistory chatId={chat.id} isExpanded={isExpanded} />
+        </CollapsibleContent>
+      </Collapsible>
     </SidebarMenuItem>
   )
 }
