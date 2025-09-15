@@ -14,10 +14,6 @@ const nextConfig = {
       }
     ]
   },
-  // Enable experimental features for better dev experience in Replit
-  experimental: {
-    allowedOrigins: ['*']
-  },
   images: {
     remotePatterns: [
       {
