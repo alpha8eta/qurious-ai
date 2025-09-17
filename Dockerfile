@@ -10,6 +10,7 @@ RUN bun install
 # Copy source code and build
 COPY . .
 RUN bun next telemetry disable
+ENV NODE_ENV=production
 RUN bun run build
 
 # Runtime stage
@@ -22,6 +23,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/bun.lock ./bun.lock
 COPY --from=builder /app/node_modules ./node_modules
+# Copy Bun preload configuration and polyfills for production runtime
+COPY --from=builder /app/bunfig.toml ./bunfig.toml
+COPY --from=builder /app/polyfills ./polyfills
 
 # Start production server
 CMD ["bun", "start", "-H", "0.0.0.0"]

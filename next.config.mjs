@@ -52,7 +52,8 @@ const nextConfig = {
     }
 
     return config
-  }
+  },
+  serverExternalPackages: []
 }
 
 export default nextConfig
