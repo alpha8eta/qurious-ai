@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { deleteChat, getChat } from '@/lib/actions/chat'
+import { deleteChat, loadChat } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
   const userId = await getCurrentUserId()
 
   try {
-    const chat = await getChat(chatId, userId)
+    const chat = await loadChat(chatId, userId)
 
     if (!chat) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
