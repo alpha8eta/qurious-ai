@@ -109,5 +109,20 @@
   },
   "overrides": {
     "cmdk": "$cmdk"
+  },
+  "pnpm": {
+    "overrides": {
+      "cmdk": "$cmdk"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "react": "19",
+        "react-dom": "19"
+      },
+      "ignoreMissing": [
+        "react",
+        "react-dom"
+      ]
+    }
   }
 }
