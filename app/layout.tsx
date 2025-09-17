@@ -58,14 +58,13 @@ export default async function RootLayout({
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Only fetch user if Supabase is configured AND session cookies are present
+  // Enable Supabase auth but with safeguards to prevent hanging
   if (supabaseUrl && supabaseAnonKey) {
-    const cookieStore = cookies()
-    const hasSupabaseCookie = cookieStore.getAll().some((c: any) => c.name.startsWith('sb'))
-    
-    if (hasSupabaseCookie) {
-      try {
-        // Dynamic import and timeout to prevent blocking layout compilation
+    try {
+      const cookieStore = cookies()
+      const hasSupabaseCookie = cookieStore.getAll().some((c: any) => c.name.startsWith('sb'))
+      
+      if (hasSupabaseCookie) {
         const { createClient } = await import('@/lib/supabase/server')
         const supabase = createClient()
         const getUserPromise = supabase.auth.getUser()
@@ -79,11 +78,11 @@ export default async function RootLayout({
         ])
         
         user = result
-      } catch (error) {
-        // If Supabase is unreachable or times out, continue without user
-        console.warn('Supabase auth failed:', error)
-        user = null
       }
+    } catch (error) {
+      // If Supabase is unreachable or times out, continue without user
+      console.warn('Supabase auth failed:', error)
+      user = null
     }
   }
 

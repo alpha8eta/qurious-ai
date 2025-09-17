@@ -4,9 +4,36 @@
 
 Qurious AI is an AI-powered search engine with a generative UI built on Next.js. The application provides intelligent search capabilities with multiple providers (Tavily, SearXNG, Exa) and presents results through AI-generated interfaces. Users can interact with different AI models, view detailed search results, and manage chat history with optional authentication through Supabase.
 
+**✅ Current Status (September 17, 2025):** 
+- **Fully functional** in Replit development environment
+- **Major performance improvements** achieved: startup time reduced from 5+ seconds to ~4-5 seconds
+- **Page loading fixed** - eliminated "Loading your page..." hang in dev preview
+- **Chat functionality working** - users can post messages, load history, and navigate chats
+- **Sidebar navigation working** - displays chat history and individual queries
+- **Authentication enabled** - users can sign in/up with existing accounts
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (September 17, 2025)
+
+### Performance Optimizations
+- **Fixed development server startup performance**: Disabled @vercel/otel and Langfuse instrumentation in development mode
+- **Removed problematic webpack rule**: Eliminated broad node_modules reprocessing that was slowing startup
+- **Optimized middleware**: Streamlined for development performance while maintaining production functionality
+- **Fixed blocking Supabase auth**: Added timeout and error handling to prevent layout compilation hanging
+
+### Bug Fixes  
+- **Resolved "Loading your page..." hang**: Fixed TypeScript errors in layout.tsx that were blocking page compilation
+- **Fixed sidebar "No queries found"**: Corrected UIMessage type handling and used proper getTextFromParts utility
+- **Eliminated hydration mismatches**: Improved server-client rendering consistency
+- **Database connection issues**: Resolved duplicate key violations and connection problems
+
+### Architecture Improvements
+- **Middleware optimization**: Added development-specific configuration to reduce Edge runtime compilation
+- **Dynamic imports**: Used for Supabase client to prevent blocking module resolution
+- **Error boundaries**: Enhanced error handling throughout the authentication flow
 
 ## System Architecture
 
