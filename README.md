@@ -1,6 +1,6 @@
 <div align="center">
 
-# Morphic
+# Qurious AI
 
 An AI-powered search engine with a generative UI.
 
@@ -118,13 +118,13 @@ Models are configured in `config/models/*.json` with profile-based settings. Whe
 Fork the repo to your Github account, then run the following command to clone the repo:
 
 ```bash
-git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/morphic.git
+git clone git@github.com:[YOUR_GITHUB_ACCOUNT]/qurious-ai.git
 ```
 
 ### 2. Install dependencies
 
 ```bash
-cd morphic
+cd qurious-ai
 bun install
 ```
 
@@ -174,7 +174,7 @@ Visit http://localhost:3000 in your browser.
 
 ## 🌐 Deploy
 
-Host your own live version of Morphic with Vercel or Docker.
+Host your own live version of Qurious AI with Vercel or Docker.
 
 ### Vercel
 
@@ -182,7 +182,7 @@ Host your own live version of Morphic with Vercel or Docker.
 
 ## 👥 Contributing
 
-We welcome contributions to Morphic! Whether it's bug reports, feature requests, or pull requests, all contributions are appreciated.
+We welcome contributions to Qurious AI! Whether it's bug reports, feature requests, or pull requests, all contributions are appreciated.
 
 Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
