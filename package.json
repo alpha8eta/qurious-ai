@@ -55,7 +55,7 @@
     "ai": "^5.0.39",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
-    "cmdk": "1.0.0",
+    "cmdk": "latest",
     "dotenv": "^17.2.1",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.3",
@@ -107,7 +107,7 @@
   "engines": {
     "bun": "1.2.12"
   },
-  "resolutions": {
-    "cmdk": "1.0.0"
+  "overrides": {
+    "cmdk": "$cmdk"
   }
 }
