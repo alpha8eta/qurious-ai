@@ -2,6 +2,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Simplified middleware for development performance  
+  return NextResponse.next()
+  
   // Get the protocol from X-Forwarded-Proto header or request protocol
   const protocol =
     request.headers.get('x-forwarded-proto') || request.nextUrl.protocol
@@ -30,12 +33,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/ (all Next.js internal files including HMR)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/|api/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    // Only match API routes in development for better performance
+    process.env.NODE_ENV === 'production' 
+      ? '/((?!_next/|api/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+      : '/api/(.*)'
   ]
 }

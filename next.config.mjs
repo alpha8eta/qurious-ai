@@ -38,15 +38,8 @@ const nextConfig = {
     ]
   },
   webpack: (config, { isServer }) => {
-    // Handle ESM packages that cause issues
-    config.module.rules.push({
-      test: /\.m?js$/,
-      include: /node_modules/,
-      type: 'javascript/auto',
-      resolve: {
-        fullySpecified: false
-      }
-    })
+    // Remove overly broad webpack rule that slows development startup
+    // Only add specific rules if needed for particular packages
 
     // Add fallback for problematic modules
     if (!isServer) {

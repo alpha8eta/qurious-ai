@@ -5,7 +5,6 @@ import { Suspense } from 'react'
 
 import { Analytics } from '@vercel/analytics/next'
 
-import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -61,18 +60,27 @@ export default async function RootLayout({
 
   // Only fetch user if Supabase is configured AND session cookies are present
   if (supabaseUrl && supabaseAnonKey) {
-    const cookieStore = await cookies()
-    const hasSupabaseCookie = cookieStore.getAll().some(c => c.name.startsWith('sb'))
+    const cookieStore = cookies()
+    const hasSupabaseCookie = cookieStore.getAll().some((c: any) => c.name.startsWith('sb'))
     
     if (hasSupabaseCookie) {
       try {
-        const supabase = await createClient()
-        const {
-          data: { user: supabaseUser }
-        } = await supabase.auth.getUser()
-        user = supabaseUser
+        // Dynamic import and timeout to prevent blocking layout compilation
+        const { createClient } = await import('@/lib/supabase/server')
+        const supabase = createClient()
+        const getUserPromise = supabase.auth.getUser()
+        
+        // Race the auth call against a 1 second timeout
+        const result = await Promise.race([
+          getUserPromise.then(({ data }: any) => data.user),
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Supabase auth timeout')), 1000)
+          )
+        ])
+        
+        user = result
       } catch (error) {
-        // If Supabase is unreachable, continue without user
+        // If Supabase is unreachable or times out, continue without user
         console.warn('Supabase auth failed:', error)
         user = null
       }
