@@ -16,22 +16,8 @@ export async function middleware(request: NextRequest) {
   // Create a response
   let response: NextResponse
 
-  // Handle Supabase session if configured, but skip in development or when no Supabase cookies
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const isDev = process.env.NODE_ENV !== 'production'
-  const hasSupabaseCookie = request.cookies.getAll().some(c => c.name.startsWith('sb'))
-
-  if (supabaseUrl && supabaseAnonKey && !isDev && hasSupabaseCookie) {
-    try {
-      response = await updateSession(request)
-    } catch {
-      response = NextResponse.next()
-    }
-  } else {
-    // Skip Supabase in development or when no auth cookies present
-    response = NextResponse.next()
-  }
+  // Temporarily disable Supabase middleware for debugging
+  response = NextResponse.next()
 
   // Add request information to response headers
   response.headers.set('x-url', request.url)

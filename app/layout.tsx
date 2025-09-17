@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter as FontSans } from 'next/font/google'
+import { cookies } from 'next/headers'
+import { Suspense } from 'react'
 
 import { Analytics } from '@vercel/analytics/next'
 
@@ -57,12 +59,24 @@ export default async function RootLayout({
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  // Only fetch user if Supabase is configured AND session cookies are present
   if (supabaseUrl && supabaseAnonKey) {
-    const supabase = await createClient()
-    const {
-      data: { user: supabaseUser }
-    } = await supabase.auth.getUser()
-    user = supabaseUser
+    const cookieStore = await cookies()
+    const hasSupabaseCookie = cookieStore.getAll().some(c => c.name.startsWith('sb'))
+    
+    if (hasSupabaseCookie) {
+      try {
+        const supabase = await createClient()
+        const {
+          data: { user: supabaseUser }
+        } = await supabase.auth.getUser()
+        user = supabaseUser
+      } catch (error) {
+        // If Supabase is unreachable, continue without user
+        console.warn('Supabase auth failed:', error)
+        user = null
+      }
+    }
   }
 
   return (
@@ -80,7 +94,9 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <SidebarProvider defaultOpen>
-            <AppSidebar />
+            <Suspense fallback={<div className="w-64 border-r bg-background" />}>
+              <AppSidebar />
+            </Suspense>
             <div className="flex flex-col flex-1 min-w-0">
               <Header user={user} />
               <main className="flex flex-1 min-h-0 min-w-0 overflow-hidden">
