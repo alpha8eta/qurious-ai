@@ -55,7 +55,7 @@
     "ai": "^5.0.39",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
-    "cmdk": "latest",
+    "cmdk": "^1.1.1",
     "dotenv": "^17.2.1",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.3",
@@ -108,21 +108,6 @@
     "bun": "1.2.12"
   },
   "overrides": {
-    "cmdk": "$cmdk"
-  },
-  "pnpm": {
-    "overrides": {
-      "cmdk": "$cmdk"
-    },
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "react": "19",
-        "react-dom": "19"
-      },
-      "ignoreMissing": [
-        "react",
-        "react-dom"
-      ]
-    }
+    "cmdk": "^1.1.1"
   }
 }
