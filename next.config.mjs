@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Allow all hosts for Replit environment
+  allowedDevOrigins: ['11d7bd13-1e53-46b4-ab35-38102638992a-00-2j33je90nc3tu.kirk.replit.dev'],
   async headers() {
     return [
       {

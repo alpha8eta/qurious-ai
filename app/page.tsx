@@ -1,10 +1,10 @@
-import { generateId } from '@/lib/db/schema'
-
 import { ChangelogBanner } from '@/components/changelog-banner'
 import { Chat } from '@/components/chat'
 
 export default async function Page() {
-  const id = generateId()
+  // Use a consistent ID for new chats that won't cause hydration mismatch
+  // The Chat component will handle ID generation internally when needed
+  const id = 'new-chat'
   return (
     <>
       <Chat id={id} />
