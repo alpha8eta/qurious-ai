@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { MessageCircle } from 'lucide-react'
 
-import { Chat } from '@/lib/types'
+import { Chat } from '@/lib/db/schema'
+import type { UIMessage } from '@/lib/types/ai'
+import { getTextFromParts } from '@/lib/utils/message-utils'
 
 import {
   SidebarMenu,
@@ -33,40 +35,6 @@ const queryCache = new Map<string, QueryItem[]>()
 // Clear all cached queries on component load to ensure fresh data
 queryCache.clear()
 
-// Helper function to extract readable text from AI SDK CoreMessage content formats
-const getPreviewText = (content: any): string => {
-  // Handle string content (simple case)
-  if (typeof content === 'string') return content
-  
-  // Handle array content (CoreMessage format)
-  if (Array.isArray(content)) {
-    return content
-      .map((item: any) => {
-        // Handle AI SDK content items with type and text properties
-        if (item && typeof item === 'object' && item.type === 'text' && item.text) {
-          return item.text
-        }
-        // Fallback for string items or other text content
-        if (typeof item === 'string') return item
-        if (item?.text) return item.text
-        if (item?.content) return item.content
-        return ''
-      })
-      .filter(Boolean)
-      .join(' ')
-      .trim()
-  }
-  
-  // Handle object content with direct text property
-  if (content && typeof content === 'object') {
-    if (typeof content.text === 'string') return content.text
-    if (typeof content.content === 'string') return content.content
-    // Handle nested array content
-    if (Array.isArray(content.content)) return getPreviewText(content.content)
-  }
-  
-  return ''
-}
 
 export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) {
   const [queries, setQueries] = useState<QueryItem[]>([])
@@ -91,23 +59,19 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
           throw new Error('Failed to fetch chat')
         }
 
-        const chat: Chat = await response.json()
+        const chat: Chat & { messages: UIMessage[] } = await response.json()
         
         
-        // Extract user queries from messages - use canonical anchor IDs that match chat sections
+        // Extract user queries from UIMessage format
         const userQueries: QueryItem[] = []
         let userIndex = 0
         
         if (chat.messages && Array.isArray(chat.messages)) {
-          chat.messages.forEach((message: any) => {
-            // Match user messages with proper role checking
-            const isUserMessage = message.role === 'user' || 
-                                 message.role === 'human' ||
-                                 (typeof message.role === 'string' && message.role.toLowerCase().includes('user'))
-            
-            if (isUserMessage) {
-              // Extract content using improved parsing for AI SDK CoreMessage format
-              const content = getPreviewText(message.content)
+          chat.messages.forEach((message: UIMessage) => {
+            // Match user messages
+            if (message.role === 'user') {
+              // Extract content from parts array using utility function
+              const content = getTextFromParts(message.parts)
               
               if (content && content.trim().length > 0) {
                 // Use canonical anchor ID - same logic as in chat.tsx section builder
@@ -115,7 +79,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
                 userQueries.push({
                   id: queryId,
                   content: content.trim(),
-                  timestamp: message.createdAt || message.timestamp ? new Date(message.createdAt || message.timestamp) : undefined
+                  timestamp: (message.metadata as any)?.createdAt ? new Date((message.metadata as any).createdAt) : undefined
                 })
               }
               userIndex++
