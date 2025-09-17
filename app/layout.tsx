@@ -61,12 +61,18 @@ export default async function RootLayout({
   // Enable Supabase auth but with safeguards to prevent hanging
   if (supabaseUrl && supabaseAnonKey) {
     try {
-      const cookieStore = cookies()
+      const cookieStore = await cookies()
       const hasSupabaseCookie = cookieStore.getAll().some((c: any) => c.name.startsWith('sb'))
       
       if (hasSupabaseCookie) {
         const { createClient } = await import('@/lib/supabase/server')
-        const supabase = createClient()
+        const supabase = await createClient()
+        
+        // Check if supabase client is properly initialized
+        if (!supabase || !supabase.auth) {
+          throw new Error('Supabase client not properly initialized')
+        }
+        
         const getUserPromise = supabase.auth.getUser()
         
         // Race the auth call against a 1 second timeout
