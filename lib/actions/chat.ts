@@ -4,7 +4,7 @@ import { revalidateTag, unstable_cache } from 'next/cache'
 
 import { generateChatTitle } from '@/lib/agents/title-generator'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
-import * as dbActions from '@/lib/db/actions'
+// Lazy-load database actions to prevent blocking during module evaluation
 import type { Chat, Message } from '@/lib/db/schema'
 import { generateId } from '@/lib/db/schema'
 import type { UIMessage } from '@/lib/types/ai'
@@ -12,6 +12,12 @@ import { getTextFromParts } from '@/lib/utils/message-utils'
 
 // Constants
 const DEFAULT_CHAT_TITLE = 'Untitled'
+
+// Helper to lazy-load database actions
+async function getDbActions() {
+  const dbActions = await import('@/lib/db/actions')
+  return dbActions
+}
 
 // Create cached version of loadChatWithMessages with dynamic tags per chat
 const getCachedChatWithMessages = (
@@ -21,6 +27,7 @@ const getCachedChatWithMessages = (
   // Create a unique cache instance for each chat
   const cachedFunction = unstable_cache(
     async () => {
+      const dbActions = await getDbActions()
       return dbActions.loadChatWithMessages(chatId, requestingUserId)
     },
     ['chat-with-messages', chatId, requestingUserId || 'anonymous'], // cache key
@@ -41,6 +48,7 @@ export async function getChats() {
   if (!userId) {
     return []
   }
+  const dbActions = await getDbActions()
   return dbActions.getChats(userId)
 }
 
@@ -52,6 +60,7 @@ export async function getChatsPage(limit = 20, offset = 0) {
   if (!userId) {
     return { chats: [], nextOffset: null }
   }
+  const dbActions = await getDbActions()
   return dbActions.getChatsPage(userId, limit, offset)
 }
 
@@ -81,6 +90,7 @@ export async function createChat(
   const chatTitle = title || DEFAULT_CHAT_TITLE
 
   // Create chat
+  const dbActions = await getDbActions()
   const chat = await dbActions.createChat({
     id: chatId,
     title: chatTitle.substring(0, 255),
@@ -113,6 +123,8 @@ export async function createChatAndSaveMessage(
   // Extract title from message if not provided
   const chatTitle =
     title || getTextFromParts(message.parts as any[]) || DEFAULT_CHAT_TITLE
+
+  const dbActions = await getDbActions()
 
   // Create chat
   const chat = await dbActions.createChat({
@@ -147,6 +159,8 @@ export async function createChatWithFirstMessage(
 ): Promise<{ chat: Chat; message: Message }> {
   const messageId = message.id || generateId()
   const chatTitle = title || DEFAULT_CHAT_TITLE
+
+  const dbActions = await getDbActions()
 
   // Use transaction for atomic operation
   const result = await dbActions.createChatWithFirstMessageTransaction({
@@ -185,6 +199,7 @@ export async function upsertMessage(
   // Skip access check - userId is required for audit/logging but not for authorization
   // Caller MUST ensure authorization before calling this function
   const messageId = message.id || generateId()
+  const dbActions = await getDbActions()
   const dbMessage = await dbActions.upsertMessage(
     {
       ...message,
@@ -209,6 +224,7 @@ export async function deleteChat(chatId: string) {
     return { success: false, error: 'User not authenticated' }
   }
 
+  const dbActions = await getDbActions()
   const result = await dbActions.deleteChat(chatId, userId)
 
   if (result.success) {
@@ -227,6 +243,7 @@ export async function clearChats() {
     return { success: false, error: 'User not authenticated' }
   }
 
+  const dbActions = await getDbActions()
   const chats = await dbActions.getChats(userId)
 
   for (const chat of chats) {
@@ -248,6 +265,7 @@ export async function deleteMessagesAfter(chatId: string, messageId: string) {
   }
 
   // Verify access
+  const dbActions = await getDbActions()
   const chat = await dbActions.getChat(chatId, userId)
   if (!chat || chat.userId !== userId) {
     return { success: false, error: 'Unauthorized' }
@@ -269,6 +287,7 @@ export async function shareChat(chatId: string) {
     return null
   }
 
+  const dbActions = await getDbActions()
   const updatedChat = await dbActions.updateChatVisibility(
     chatId,
     userId,
@@ -295,6 +314,7 @@ export async function deleteMessagesFromIndex(
   }
 
   // Verify access
+  const dbActions = await getDbActions()
   const chat = await dbActions.getChat(chatId, userId)
   if (!chat || chat.userId !== userId) {
     return { success: false, error: 'Unauthorized' }
@@ -328,6 +348,7 @@ export async function saveChatTitle(
       modelId,
       parentTraceId
     })
+    const dbActions = await getDbActions()
     await dbActions.updateChatTitle(chatId, title)
     revalidateTag(`chat-${chatId}`)
   }

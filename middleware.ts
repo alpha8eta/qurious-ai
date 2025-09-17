@@ -1,4 +1,4 @@
-import { updateSession } from '@/lib/supabase/middleware'
+// Static import removed - was blocking first request. Use dynamic import if needed.
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
