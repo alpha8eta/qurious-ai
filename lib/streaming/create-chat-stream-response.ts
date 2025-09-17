@@ -208,8 +208,10 @@ export async function createChatStreamResponse(
       }
     },
     onError: (error: any) => {
-      // console.error('Stream error:', error)
-      return error instanceof Error ? error.message : String(error)
+      console.error('Stream error:', error)
+      // Return a safe, user-friendly message instead of raw error content
+      // This prevents HTML error pages from being displayed as chat content
+      return 'An error occurred while processing your request. Please try again.'
     },
     onFinish: async ({ responseMessage, isAborted }) => {
       if (isAborted || !responseMessage) return
