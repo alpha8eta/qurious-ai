@@ -91,8 +91,8 @@ export async function createChat(
   // Revalidate cache
   revalidateTag(`chat-${chatId}`)
 
-  // Normalize with threading support and date conversion
-  return normalizeChatThreading(chat)
+  // Return the created chat
+  return chat
 }
 
 /**
