@@ -11,6 +11,7 @@ RUN bun install
 COPY . .
 RUN bun next telemetry disable
 ENV NODE_ENV=production
+ENV DISABLE_OTEL=1
 RUN bun run build
 
 # Runtime stage

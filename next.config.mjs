@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Build performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Reduce build time by optimizing compilation
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  
   // Allow all hosts for Replit environment
   allowedDevOrigins: ['11d7bd13-1e53-46b4-ab35-38102638992a-00-2j33je90nc3tu.kirk.replit.dev'],
   async headers() {
@@ -38,9 +47,6 @@ const nextConfig = {
     ]
   },
   webpack: (config, { isServer }) => {
-    // Remove overly broad webpack rule that slows development startup
-    // Only add specific rules if needed for particular packages
-
     // Add fallback for problematic modules
     if (!isServer) {
       config.resolve.fallback = {
@@ -53,7 +59,8 @@ const nextConfig = {
 
     return config
   },
-  serverExternalPackages: []
+  serverExternalPackages: [],
+  
 }
 
 export default nextConfig
