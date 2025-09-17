@@ -106,5 +106,8 @@
   },
   "engines": {
     "bun": "1.2.12"
+  },
+  "resolutions": {
+    "cmdk": "1.0.0"
   }
 }

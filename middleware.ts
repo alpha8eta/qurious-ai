@@ -33,9 +33,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Only match API routes in development for better performance
-    process.env.NODE_ENV === 'production' 
-      ? '/((?!_next/|api/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
-      : '/api/(.*)'
+    // Match all routes except Next.js internal routes and static files
+    '/((?!_next/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
   ]
 }
