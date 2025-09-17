@@ -1,50 +1,61 @@
-import { CoreMessage, generateObject } from 'ai'
+import { generateObject, type ModelMessage } from 'ai'
+import { z } from 'zod'
 
-import { relatedSchema } from '@/lib/schema/related'
+import { getRelatedQuestionsModel } from '../config/model-types'
+import { getModel } from '../utils/registry'
+import { isTracingEnabled } from '../utils/telemetry'
 
-import {
-  getModel,
-  getToolCallModel,
-  isToolCallSupported
-} from '../utils/registry'
+import { RELATED_QUESTIONS_PROMPT } from './prompts/related-questions-prompt'
+
+const relatedQuestionsSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string()
+      })
+    )
+    .length(3)
+})
 
 export async function generateRelatedQuestions(
-  messages: CoreMessage[],
-  model: string
+  messages: ModelMessage[],
+  abortSignal?: AbortSignal,
+  parentTraceId?: string
 ) {
-  const lastMessages = messages.slice(-1).map(message => ({
-    ...message,
-    role: 'user'
-  })) as CoreMessage[]
+  // Use the related questions model configuration from JSON
+  const relatedModel = getRelatedQuestionsModel()
+  const modelId = `${relatedModel.providerId}:${relatedModel.id}`
 
-  const supportedModel = isToolCallSupported(model)
-  const currentModel = supportedModel
-    ? getModel(model)
-    : getToolCallModel(model)
-
-  const result = await generateObject({
-    model: currentModel,
-    system: `As a professional web researcher, your task is to generate a set of exactly three queries that explore the subject matter more deeply, building upon the initial query and the information uncovered in its search results.
-
-    For instance, if the original query was "Starship's third test flight key milestones", your output should follow this format:
-    {
-      "items": [
-        {"query": "What were the technical achievements of SpaceX Starship's third test flight?"},
-        {"query": "How does Starship's third flight performance compare to previous test flights?"},
-        {"query": "What are the next planned milestones for SpaceX Starship development?"}
-      ]
+  const { object } = await generateObject({
+    model: getModel(modelId),
+    schema: relatedQuestionsSchema,
+    schemaName: 'RelatedQuestions',
+    schemaDescription:
+      'Generate 3 concise follow-up questions (max 10-12 words each)',
+    system: RELATED_QUESTIONS_PROMPT,
+    messages: [
+      ...messages,
+      {
+        role: 'user',
+        content:
+          'Based on the conversation history and search results, generate 3 unique follow-up questions that would help the user explore different aspects of the topic. Focus on questions that dig deeper into specific findings or explore related areas not yet covered.'
+      }
+    ],
+    abortSignal,
+    experimental_telemetry: {
+      isEnabled: isTracingEnabled(),
+      functionId: 'related-questions',
+      metadata: {
+        modelId,
+        agentType: 'related-questions-generator',
+        messageCount: messages.length,
+        ...(parentTraceId && {
+          langfuseTraceId: parentTraceId,
+          langfuseUpdateParent: false
+        })
+      }
     }
-
-    IMPORTANT: You must generate exactly three related questions. Each question should:
-    1. Build upon the original query
-    2. Explore different aspects (technical, comparative, future implications)
-    3. Be specific and actionable for web research
-    
-    Aim to create queries that progressively delve into more specific aspects, implications, or adjacent topics related to the initial query. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.
-    Please match the language of the response to the user's language.`,
-    messages: lastMessages,
-    schema: relatedSchema
   })
 
-  return result
+  return object
 }
