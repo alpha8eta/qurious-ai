@@ -1,0 +1,163 @@
+Sep 18 09:46:22.02
+POST
+200
+qurious-ai.vercel.app
+/api/chat
+Sep 18 09:46:18.23
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:46:18.23
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:46:17.27
+GET
+200
+qurious-ai.vercel.app
+/
+Sep 18 09:46:16.85
+GET
+200
+qurious-ai.vercel.app
+/api/chats
+Sep 18 09:45:59.76
+POST
+200
+qurious-ai.vercel.app
+/api/chat
+4
+Stream error: Error: An error occurred while processing your request. Please try again. at <unknown> (.next/server/chunks/7053.js:5:11224) at runUpdateMessageJob (.next/server/chunks/7053.js:5:11617) at Object.transform (.next/server/chunks/7053.js:5:4916)
+Sep 18 09:45:56.48
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:45:56.34
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:45:55.53
+GET
+200
+qurious-ai.vercel.app
+/
+Sep 18 09:45:53.08
+GET
+200
+qurious-ai.vercel.app
+/auth/forgot-password
+Sep 18 09:45:52.64
+GET
+200
+qurious-ai.vercel.app
+/auth/login
+Sep 18 09:45:51.19
+GET
+200
+qurious-ai.vercel.app
+/auth/login
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:51.19
+GET
+200
+qurious-ai.vercel.app
+/auth/sign-up
+Sep 18 09:45:48.74
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:45:48.49
+GET
+200
+qurious-ai.vercel.app
+/api/chats
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:48.47
+GET
+200
+qurious-ai.vercel.app
+/changelog.json
+Sep 18 09:45:46.83
+GET
+200
+qurious-ai.vercel.app
+/
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:33.96
+GET
+200
+qurious-ai.vercel.app
+/search/nk5y4bet06rynlgt5ela1a5k
+5
+[Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] { digest: '3038941317' }
+Sep 18 09:45:20.67
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/changelog.json
+Sep 18 09:45:20.66
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/api/chats
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:20.63
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/changelog.json
+Sep 18 09:45:20.23
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/changelog.json
+Sep 18 09:45:20.13
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/api/chats
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:20.07
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/changelog.json
+Sep 18 09:45:19.85
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+Sep 18 09:45:19.29
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+Sep 18 09:45:18.77
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+Sep 18 09:45:18.69
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:17.90
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
+Sep 18 09:45:17.76
+GET
+200
+qurious-bmlqh1167-sovereign-ventures.vercel.app
+/
+2
+Langfuse secret key was not passed to constructor or not set as 'LANGFUSE_SECRET_KEY' environment variable. No observability data will be sent to Langfuse.
