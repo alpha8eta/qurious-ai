@@ -1,0 +1,1 @@
+DRIZZLE_DATABASE_URL=postgresql://postgres:hA44lRF3XFK8fANR@kehiftdpknekpymtqywp.supabase.co:5432/postgres?sslmode=require pnpm drizzle-kit migrate
