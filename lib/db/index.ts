@@ -9,54 +9,101 @@ import * as schema from './schema'
 // Use restricted user for application if available, otherwise fall back to regular user
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
+const isBuild = process.env.NODE_ENV === 'production' && (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.DATABASE_URL)
 
-if (
-  !process.env.DATABASE_URL &&
-  !process.env.DATABASE_RESTRICTED_URL &&
-  !isTest
-) {
-  throw new Error(
-    'DATABASE_URL or DATABASE_RESTRICTED_URL environment variable is not set'
-  )
+// Lazy database connection - only initialize when actually used
+let _db: ReturnType<typeof drizzle> | null = null
+
+function initializeDatabase() {
+  if (_db) return _db
+
+  // Return mock database during build phase to prevent errors
+  if (isBuild) {
+    // Return a comprehensive mock that satisfies TypeScript but doesn't actually connect
+    _db = {
+      select: () => ({ from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }) }),
+      insert: () => ({ values: () => Promise.resolve({ changes: 0 }) }),
+      update: () => ({ set: () => ({ where: () => Promise.resolve({ changes: 0 }) }) }),
+      delete: () => ({ where: () => Promise.resolve({ changes: 0 }) }),
+      execute: () => Promise.resolve([]),
+      transaction: (callback: any) => callback(_db),
+      $with: () => _db,
+      query: {
+        messages: {
+          findMany: () => Promise.resolve([]),
+          findFirst: () => Promise.resolve(null)
+        },
+        chats: {
+          findMany: () => Promise.resolve([]),
+          findFirst: () => Promise.resolve(null)
+        }
+      }
+    } as any
+    return _db
+  }
+
+  if (
+    !process.env.DATABASE_URL &&
+    !process.env.DATABASE_RESTRICTED_URL &&
+    !isTest
+  ) {
+    throw new Error(
+      'DATABASE_URL or DATABASE_RESTRICTED_URL environment variable is not set'
+    )
+  }
+
+  // Connection with connection pooling for server environments
+  // Prefer restricted user for application runtime
+  const connectionString =
+    process.env.DATABASE_RESTRICTED_URL ?? // Prefer restricted user
+    process.env.DATABASE_URL ??
+    (isTest ? 'postgres://user:pass@localhost:5432/testdb' : undefined)
+
+  if (!connectionString) {
+    throw new Error(
+      'DATABASE_URL or DATABASE_RESTRICTED_URL environment variable is not set'
+    )
+  }
+
+  // Log which connection is being used (for debugging)
+  if (isDevelopment) {
+    console.log(
+      '[DB] Using connection:',
+      process.env.DATABASE_RESTRICTED_URL
+        ? 'Restricted User (RLS Active)'
+        : 'Owner User (RLS Bypassed)'
+    )
+  }
+
+  const client = postgres(connectionString, {
+    ssl: { rejectUnauthorized: false },
+    prepare: false,
+    max: 20 // Max 20 connections
+  })
+
+  _db = drizzle(client, {
+    schema: { ...schema, ...relations }
+  })
+
+  return _db
 }
 
-// Connection with connection pooling for server environments
-// Prefer restricted user for application runtime
-const connectionString =
-  process.env.DATABASE_RESTRICTED_URL ?? // Prefer restricted user
-  process.env.DATABASE_URL ??
-  (isTest ? 'postgres://user:pass@localhost:5432/testdb' : undefined)
-
-if (!connectionString) {
-  throw new Error(
-    'DATABASE_URL or DATABASE_RESTRICTED_URL environment variable is not set'
-  )
-}
-
-// Log which connection is being used (for debugging)
-if (isDevelopment) {
-  console.log(
-    '[DB] Using connection:',
-    process.env.DATABASE_RESTRICTED_URL
-      ? 'Restricted User (RLS Active)'
-      : 'Owner User (RLS Bypassed)'
-  )
-}
-const client = postgres(connectionString, {
-  ssl: { rejectUnauthorized: false },
-  prepare: false,
-  max: 20 // Max 20 connections
-})
-
-export const db = drizzle(client, {
-  schema: { ...schema, ...relations }
+// Export a getter function that lazily initializes the database
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(_, prop) {
+    const database = initializeDatabase()
+    if (!database) {
+      throw new Error('Database not initialized')
+    }
+    return database[prop as keyof ReturnType<typeof drizzle>]
+  }
 })
 
 // Helper type for all tables
 export type Schema = typeof schema
 
 // Verify restricted user permissions on startup
-if (process.env.DATABASE_RESTRICTED_URL && !isTest) {
+if (process.env.DATABASE_RESTRICTED_URL && !isTest && !isBuild) {
   // Only run verification in server environments, not during build
   if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
     ;(async () => {

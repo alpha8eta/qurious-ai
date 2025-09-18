@@ -134,7 +134,7 @@ export async function loadChat(
 ): Promise<UIMessage[]> {
   return withOptionalRLS(userId || null, async tx => {
     // Use Drizzle's query API with relations
-    const result = await tx.query.messages.findMany({
+    const result = await (tx as any).query.messages.findMany({
       where: eq(messages.chatId, chatId),
       with: {
         parts: {
@@ -145,7 +145,7 @@ export async function loadChat(
     })
 
     // Convert to UI format
-    return result.map(msg => buildUIMessageFromDB(msg, msg.parts))
+    return result.map((msg: any) => buildUIMessageFromDB(msg, msg.parts))
   })
 }
 
@@ -163,7 +163,7 @@ export async function loadChatWithMessages(
     // Get chat and messages in parallel
     const [chatResult, messagesResult] = await Promise.all([
       tx.select().from(chats).where(eq(chats.id, chatId)).limit(1),
-      tx.query.messages.findMany({
+      (tx as any).query.messages.findMany({
         where: eq(messages.chatId, chatId),
         with: {
           parts: {
@@ -185,7 +185,7 @@ export async function loadChatWithMessages(
     }
 
     // Build result
-    const uiMessages = messagesResult.map(msg =>
+    const uiMessages = messagesResult.map((msg: any) =>
       buildUIMessageFromDB(msg, msg.parts)
     )
     return { ...chat, messages: uiMessages }
