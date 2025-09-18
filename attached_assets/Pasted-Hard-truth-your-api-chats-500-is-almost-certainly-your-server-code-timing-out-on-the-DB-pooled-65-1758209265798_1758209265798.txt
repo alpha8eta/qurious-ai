@@ -1,0 +1,154 @@
+Hard truth: your /api/chats 500 is almost certainly your server code timing out on the DB (pooled 6543) or running on the Edge runtime by mistake. The digest is just Next.js hiding the real error; the root cause is your connection layer.
+
+Do this exactly:
+
+1) Force Node.js runtime + stable DB pool (stop timeouts)
+
+app/api/chats/route.ts
+
+export const runtime = 'nodejs'; // 🔴 absolutely required if you touch Postgres
+
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { db } from '@/db'; // your drizzle(pg) singleton
+
+const q = z.object({
+  offset: z.coerce.number().int().min(0).default(0),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const { offset, limit } = q.parse({
+      offset: url.searchParams.get('offset'),
+      limit: url.searchParams.get('limit'),
+    });
+
+    // Example: replace with your actual Drizzle query
+    const rows = await db.query.chats.findMany({
+      limit,
+      offset,
+      orderBy: (t, { desc }) => [desc(t.createdAt)],
+    });
+
+    return NextResponse.json({ ok: true, data: rows });
+  } catch (err: any) {
+    // bubble useful info into logs, not to the client
+    console.error('GET /api/chats failed:', {
+      message: err?.message,
+      code: err?.code,
+      errno: err?.errno,
+      stack: err?.stack,
+    });
+    return NextResponse.json(
+      { ok: false, error: 'SERVER_ERROR' },
+      { status: 500 }
+    );
+  }
+}
+
+
+db.ts (singleton pool tuned for Supabase pooler)
+(If you don’t already have this—add it. If you do, match these options.)
+
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+const g = globalThis as any;
+
+export const pg: Pool =
+  g.__pg ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL, // 6543 + sslmode=require
+    max: 5,                    // keep well under Supabase pool size (15)
+    idleTimeoutMillis: 10_000, // free idle connections quickly
+    connectionTimeoutMillis: 5_000,
+    allowExitOnIdle: true,
+    // ssl is inferred from ?sslmode=require; no extra CA needed
+  });
+
+if (!g.__pg) g.__pg = pg;
+
+export const db = drizzle(pg);
+
+
+Why:
+
+Edge runtime cannot use pg/TCP → instant failures.
+
+Creating a new Pool per request exhausts Supabase’s 15 pooled slots → 6543 CONNECT_TIMEOUT.
+
+The above reuses a single pool across invocations.
+
+2) Verify envs in Vercel (Production)
+
+DATABASE_URL = postgresql://postgres:***@…supabase.co:6543/postgres?sslmode=require
+(No quotes in the UI. Password with */+ is fine.)
+
+Do NOT set DIRECT_DATABASE_URL in Vercel (CI-only).
+
+If you use Supabase client anywhere:
+
+SUPABASE_URL, SUPABASE_ANON_KEY (and SUPABASE_SERVICE_ROLE_KEY server-only if needed).
+
+3) Add a DB health endpoint to isolate connection errors
+
+app/api/db-health/route.ts
+
+export const runtime = 'nodejs';
+import { NextResponse } from 'next/server';
+import { pg } from '@/db';
+
+export async function GET() {
+  try {
+    const r = await pg.query('select now() as now');
+    return NextResponse.json({ ok: true, now: r.rows[0].now });
+  } catch (e: any) {
+    console.error('DB health failed:', e);
+    return NextResponse.json(
+      { ok: false, code: e?.code, errno: e?.errno, message: e?.message },
+      { status: 500 }
+    );
+  }
+}
+
+
+Hit /api/db-health right after deploy.
+
+If this times out → it’s your DB connection, not /api/chats logic.
+
+4) Guard against auth/RLS surprises (if you use Supabase JS too)
+
+If /api/chats sometimes uses Supabase client + RLS (not raw DB), make sure server-side calls use the service role key (never in the browser) to avoid 401/empty results masked as 500s:
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only
+  { auth: { persistSession: false } }
+);
+
+
+But if you’re using Drizzle via pg, RLS doesn’t apply; failures will be pure connection errors.
+
+5) Logging: surface real errors (not just digest)
+
+Next.js hides errors in production. You already get a digest; the real message is only in function logs. Check:
+
+Vercel → Project → Deployments → Functions / Logs.
+
+With the try/catch above, you’ll see the code, errno (CONNECT_TIMEOUT, ECONNRESET, etc.) in your logs.
+
+6) Common killers to eliminate
+
+Missing export const runtime = 'nodejs' on any route using DB.
+
+Creating new Pool() inside the handler (per-request).
+
+Using Prisma on pooled 6543 without pgbouncer settings (not you, but noting).
+
+Running migrations from Vercel (DDL on 6543 will time out).
+
+Network restrictions in Supabase (keep OFF unless you have static egress).

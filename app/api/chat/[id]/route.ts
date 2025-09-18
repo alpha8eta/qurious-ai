@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { deleteChat, loadChat } from '@/lib/actions/chat'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 
+// Force Node.js runtime for database operations
+export const runtime = 'nodejs'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

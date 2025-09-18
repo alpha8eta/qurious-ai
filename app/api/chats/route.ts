@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getChatsPage } from '@/lib/actions/chat'
 import { Chat as DBChat } from '@/lib/db/schema'
 
+// Force Node.js runtime for database operations
+export const runtime = 'nodejs'
+
 interface ChatPageResponse {
   chats: DBChat[]
   nextOffset: number | null
