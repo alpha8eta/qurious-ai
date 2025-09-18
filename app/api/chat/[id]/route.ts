@@ -54,7 +54,7 @@ export async function DELETE(
   const userId = await getCurrentUserId()
 
   try {
-    const result = await deleteChat(chatId, userId)
+    const result = await deleteChat(chatId)
 
     if (result.error) {
       const statusCode = result.error === 'Chat not found' ? 404 : 500
