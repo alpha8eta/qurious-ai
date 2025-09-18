@@ -9,7 +9,7 @@ import * as schema from './schema'
 // Use restricted user for application if available, otherwise fall back to regular user
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
-const isBuild = process.env.NODE_ENV === 'production' && (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.DATABASE_URL)
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
 
 // Lazy database connection - only initialize when actually used
 let _db: ReturnType<typeof drizzle> | null = null
