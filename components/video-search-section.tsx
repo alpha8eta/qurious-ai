@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { ToolInvocation } from 'ai'
+import { UIToolInvocation } from 'ai'
 
 import type { SerperSearchResults } from '@/lib/types'
 
@@ -13,7 +13,7 @@ import { Section, ToolArgsSection } from './section'
 import { VideoSearchResults } from './video-search-results'
 
 interface VideoSearchSectionProps {
-  tool: ToolInvocation
+  tool: UIToolInvocation<any>
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   chatId: string
@@ -30,23 +30,17 @@ export function VideoSearchSection({
   })
   const isLoading = status === 'submitted' || status === 'streaming'
 
-  const isToolLoading = tool.state === 'call'
-  const videoResults: SerperSearchResults =
-    tool.state === 'result' ? tool.result : undefined
-  const query = tool.args?.query as string | undefined
+  // Temporary type-safe access to tool properties
+  const isToolLoading = (tool as any).state === 'call'
+  const videoResults: SerperSearchResults = (tool as any).state === 'result' ? (tool as any).output : undefined
+  const query = (tool as any).input?.query as string | undefined
 
-  const { open } = useArtifact()
   const header = (
-    <button
-      type="button"
-      onClick={() => open({ type: 'tool-invocation', toolInvocation: tool })}
-      className="flex items-center justify-between w-full text-left rounded-md p-1 -ml-1"
-      title="Open details"
-    >
+    <div className="flex items-center justify-between w-full text-left rounded-md p-1 -ml-1">
       <ToolArgsSection tool="videoSearch" number={videoResults?.videos?.length}>
-        {query}
+        Video Search
       </ToolArgsSection>
-    </button>
+    </div>
   )
 
   return (
