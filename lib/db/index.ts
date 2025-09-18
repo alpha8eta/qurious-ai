@@ -78,7 +78,9 @@ function initializeDatabase() {
   const client = postgres(connectionString, {
     ssl: { rejectUnauthorized: false },
     prepare: false,
-    max: 20 // Max 20 connections
+    max: 5, // Reduced max connections for better pooling on Vercel
+    idle_timeout: 20, // Close idle connections after 20 seconds
+    connect_timeout: 10 // Connection timeout in seconds
   })
 
   _db = drizzle(client, {

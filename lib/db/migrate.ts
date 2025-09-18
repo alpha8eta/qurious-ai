@@ -8,17 +8,27 @@ import 'dotenv/config'
 // Run it with: bun run lib/db/migrate.ts
 
 const runMigrations = async () => {
+  // Prevent migrations from running during Vercel builds
+  if (process.env.VERCEL) {
+    console.log('Skipping migrations on Vercel build environment')
+    process.exit(0)
+  }
+
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL is not defined in environment variables')
     process.exit(1)
   }
 
   const connectionString = process.env.DATABASE_URL
-  // For Supabase connections, we need to disable SSL verification in some environments
-  // and disable prepared statements for transaction pooling mode
+  
+  // For Supabase connections, use SSL require mode for direct connections (port 5432)
+  // Disable prepared statements for transaction pooling compatibility
   const sql = postgres(connectionString, {
-    ssl: { rejectUnauthorized: false },
-    prepare: false
+    ssl: 'require', // Use SSL require for direct Supabase connections
+    prepare: false,
+    connect_timeout: 30, // 30 second connection timeout for migrations
+    idle_timeout: 0, // No idle timeout for migrations
+    max: 1 // Single connection for migrations
   })
 
   const db = drizzle(sql)

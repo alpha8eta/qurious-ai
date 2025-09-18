@@ -1,0 +1,97 @@
+11:25:34.174 
+                         ^
+11:25:34.174 
+error: write CONNECT_TIMEOUT kehiftdpknekpymtqywp.supabase.co:6543
+11:25:34.174 
+   errno: "CONNECT_TIMEOUT",
+11:25:34.174 
+ address: "kehiftdpknekpymtqywp.supabase.co",
+11:25:34.174 
+    port: 6543,
+11:25:34.174 
+    code: "CONNECT_TIMEOUT"
+11:25:34.176 
+11:25:34.176 
+      at connectTimedOut (/vercel/path0/node_modules/postgres/src/connection.js:257:20)
+11:25:34.176 
+11:25:34.190 
+Error: Command " bun run lib/db/migrate.ts && bun run build" exited with 1
+Deployment Summary
+ChatGPT said:
+Thought for 10s
+
+Hard truth: you’re still running migrations inside Vercel — and you’re hitting the pooled port (6543) to do DDL. That will timeout or choke. Migrations must run outside Vercel, against 5432 only.
+
+Fix it now (5 steps)
+
+Stop migrating in Vercel builds
+
+In package.json, remove anything like:
+
+"build": "bun run lib/db/migrate.ts && bun run build"
+
+
+Make it:
+
+"build": "next build"
+
+
+Delete/disable runtime migration code
+
+If you have lib/db/migrate.ts that executes CREATE SCHEMA / drizzle-kit migrate, delete it or guard it:
+
+// lib/db/migrate.ts — TEMP GUARD if you can't remove yet
+if (process.env.VERCEL) {
+  console.log('Skipping migrations on Vercel');
+  process.exit(0);
+}
+
+
+Run migrations in CI against 5432 (DIRECT_DATABASE_URL)
+Use the GitHub Action I gave you. Your migration step must be:
+
+DRIZZLE_DATABASE_URL=$DIRECT_DATABASE_URL bunx drizzle-kit migrate
+
+
+DIRECT_DATABASE_URL = ...:5432/postgres?sslmode=require
+
+Runtime uses pooled 6543 only
+Your app code should import a singleton pg.Pool pointed at DATABASE_URL (6543). No DDL at runtime.
+
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+export const runtime = 'nodejs'; // on any route touching DB
+
+const g = globalThis as any;
+export const pg: Pool = g.__pg ?? new Pool({
+  connectionString: process.env.DATABASE_URL!, // 6543 + sslmode=require
+  max: 5,
+  idleTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 5_000,
+  allowExitOnIdle: true,
+});
+if (!g.__pg) g.__pg = pg;
+
+export const db = drizzle(pg);
+
+
+Sanity checks
+
+Vercel envs (Production):
+
+DATABASE_URL → postgresql://...:6543/postgres?sslmode=require
+
+Do not set DIRECT_DATABASE_URL on Vercel.
+
+GitHub Secrets:
+
+DIRECT_DATABASE_URL → postgresql://...:5432/postgres?sslmode=require
+
+VERCEL_DEPLOY_HOOK_URL (or use Vercel CLI with token/org/project)
+
+Supabase:
+
+“Enforce SSL” ON ✅
+
+“Network restrictions” OFF (no IP allow-list) ✅
