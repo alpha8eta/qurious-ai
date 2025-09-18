@@ -41,11 +41,15 @@ export async function POST() {
     
   } catch (error) {
     console.error('Migration error:', error)
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    const errorDetails = error instanceof Error ? error.stack : String(error)
+    
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message,
-        details: error.stack 
+        error: errorMessage,
+        details: errorDetails 
       },
       { status: 500 }
     )
