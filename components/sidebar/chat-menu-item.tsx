@@ -22,6 +22,11 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -32,13 +37,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible'
 
 import { Spinner } from '../ui/spinner'
+
 import { ChatQueryHistory } from './chat-query-history'
 
 interface ChatMenuItemProps {
