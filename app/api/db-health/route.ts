@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+
 import { pg } from '@/lib/db/connection'
 
 // Force Node.js runtime for database operations

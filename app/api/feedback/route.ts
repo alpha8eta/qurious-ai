@@ -4,6 +4,9 @@ import { updateMessageFeedback } from '@/lib/actions/feedback'
 import { createClient } from '@/lib/supabase/server'
 import { isTracingEnabled } from '@/lib/utils/telemetry'
 
+// Force Node.js runtime for database operations
+export const runtime = 'nodejs'
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()

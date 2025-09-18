@@ -1,8 +1,9 @@
 // Optimized database connection for Vercel/Supabase production usage
-import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import * as schema from './schema'
+import { Pool } from 'pg'
+
 import * as relations from './relations'
+import * as schema from './schema'
 
 // Global singleton pool to prevent connection exhaustion
 const g = globalThis as any
