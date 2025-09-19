@@ -171,59 +171,64 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
             </SidebarMenuAction>
           </CollapsibleTrigger>
 
-      <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuAction className="size-7 p-1 mr-1">
-            <MoreHorizontal size={16} />
-            <span className="sr-only">Chat Actions</span>
-          </SidebarMenuAction>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start">
-          <AlertDialog open={isAlertOpen} onOpenChange={handleAlertOpenChange}>
-            <AlertDialogTrigger asChild>
-              <DropdownMenuItem
-                className="gap-2 text-destructive focus:text-destructive"
-                onSelect={e => {
-                  e.preventDefault()
-                }}
+          <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuAction className="size-7 p-1 mr-1">
+                <MoreHorizontal size={16} />
+                <span className="sr-only">Chat Actions</span>
+              </SidebarMenuAction>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start">
+              <AlertDialog
+                open={isAlertOpen}
+                onOpenChange={handleAlertOpenChange}
               >
-                <Trash2 size={14} />
-                Delete Chat
-              </DropdownMenuItem>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  this chat history.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isPending}>
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  disabled={isPending}
-                  onClick={event => {
-                    event.preventDefault()
-                    handleDeleteChat()
-                  }}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isPending ? (
-                    <div className="flex items-center justify-center">
-                      <Spinner />
-                    </div>
-                  ) : (
-                    'Delete'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onSelect={e => {
+                      e.preventDefault()
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Delete Chat
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      this chat history.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isPending}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      disabled={isPending}
+                      onClick={event => {
+                        event.preventDefault()
+                        handleDeleteChat()
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isPending ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner />
+                        </div>
+                      ) : (
+                        'Delete'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <CollapsibleContent>
           <ChatQueryHistory chatId={chat.id} isExpanded={isExpanded} />

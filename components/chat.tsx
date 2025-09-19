@@ -161,10 +161,10 @@ export function Chat({
         if (currentSection) {
           result.push(currentSection)
         }
-        
+
         // Create canonical anchor ID - use message.id or fallback to u-{userIndex}
         const anchorId = message.id ?? `u-${userIndex}`
-        
+
         currentSection = {
           id: anchorId,
           userMessage: message,
@@ -221,8 +221,13 @@ export function Chat({
         const lastSection = sections[sections.length - 1]
         if (lastSection) {
           requestAnimationFrame(() => {
-            const sectionElement = document.getElementById(`section-${lastSection.id}`)
-            sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            const sectionElement = document.getElementById(
+              `section-${lastSection.id}`
+            )
+            sectionElement?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            })
           })
         }
       }

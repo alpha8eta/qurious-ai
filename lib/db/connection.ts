@@ -12,10 +12,10 @@ export const pg: Pool =
   g.__pg ??
   new Pool({
     connectionString: process.env.DATABASE_URL, // 6543 + sslmode=require
-    max: 5,                    // keep well under Supabase pool size (15)
+    max: 5, // keep well under Supabase pool size (15)
     idleTimeoutMillis: 10_000, // free idle connections quickly
     connectionTimeoutMillis: 5_000,
-    allowExitOnIdle: true,
+    allowExitOnIdle: true
     // ssl is inferred from ?sslmode=require; no extra CA needed
   })
 

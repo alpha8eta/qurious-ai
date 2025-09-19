@@ -20,7 +20,7 @@ const runMigrations = async () => {
   }
 
   const connectionString = process.env.DATABASE_URL
-  
+
   // For Supabase connections, use SSL require mode for direct connections (port 5432)
   // Disable prepared statements for transaction pooling compatibility
   const sql = postgres(connectionString, {

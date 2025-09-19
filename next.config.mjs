@@ -3,14 +3,16 @@ const nextConfig = {
   // Build performance optimizations
   compress: true,
   poweredByHeader: false,
-  
+
   // Reduce build time by optimizing compilation
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: false
   },
-  
+
   // Allow all hosts for Replit environment
-  allowedDevOrigins: ['11d7bd13-1e53-46b4-ab35-38102638992a-00-2j33je90nc3tu.kirk.replit.dev'],
+  allowedDevOrigins: [
+    '11d7bd13-1e53-46b4-ab35-38102638992a-00-2j33je90nc3tu.kirk.replit.dev'
+  ],
   async headers() {
     return [
       {
@@ -59,8 +61,7 @@ const nextConfig = {
 
     return config
   },
-  serverExternalPackages: [],
-  
+  serverExternalPackages: []
 }
 
 export default nextConfig

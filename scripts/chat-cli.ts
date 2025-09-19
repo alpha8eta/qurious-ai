@@ -119,7 +119,9 @@ class ChatApiTester {
 
   private loadCookiesFromEnv(): string | undefined {
     if (process.env.QURIOUS_AI_COOKIES) {
-      console.log('🍪 Using cookies from QURIOUS_AI_COOKIES environment variable')
+      console.log(
+        '🍪 Using cookies from QURIOUS_AI_COOKIES environment variable'
+      )
       return process.env.QURIOUS_AI_COOKIES
     }
     return undefined

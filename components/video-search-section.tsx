@@ -32,7 +32,8 @@ export function VideoSearchSection({
 
   // Temporary type-safe access to tool properties
   const isToolLoading = (tool as any).state === 'call'
-  const videoResults: SerperSearchResults = (tool as any).state === 'result' ? (tool as any).output : undefined
+  const videoResults: SerperSearchResults =
+    (tool as any).state === 'result' ? (tool as any).output : undefined
   const query = (tool as any).input?.query as string | undefined
 
   const header = (

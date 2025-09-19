@@ -35,14 +35,15 @@ const queryCache = new Map<string, QueryItem[]>()
 // Clear all cached queries on component load to ensure fresh data
 queryCache.clear()
 
-
-export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) {
+export function ChatQueryHistory({
+  chatId,
+  isExpanded
+}: ChatQueryHistoryProps) {
   const [queries, setQueries] = useState<QueryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { isMobile, setOpenMobile, setOpen } = useSidebar()
-
 
   // Fetch chat messages when expanded and extract user queries
   useEffect(() => {
@@ -60,26 +61,27 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
         }
 
         const chat: Chat & { messages: UIMessage[] } = await response.json()
-        
-        
+
         // Extract user queries from UIMessage format
         const userQueries: QueryItem[] = []
         let userIndex = 0
-        
+
         if (chat.messages && Array.isArray(chat.messages)) {
           chat.messages.forEach((message: UIMessage) => {
             // Match user messages
             if (message.role === 'user') {
               // Extract content from parts array using utility function
               const content = getTextFromParts(message.parts)
-              
+
               if (content && content.trim().length > 0) {
                 // Use canonical anchor ID - same logic as in chat.tsx section builder
                 const queryId = message.id ?? `u-${userIndex}`
                 userQueries.push({
                   id: queryId,
                   content: content.trim(),
-                  timestamp: (message.metadata as any)?.createdAt ? new Date((message.metadata as any).createdAt) : undefined
+                  timestamp: (message.metadata as any)?.createdAt
+                    ? new Date((message.metadata as any).createdAt)
+                    : undefined
                 })
               }
               userIndex++
@@ -111,7 +113,7 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
 
     const chatPath = `/search/${chatId}`
     const targetUrl = `${chatPath}#section-${queryId}`
-    
+
     // Close the sidebar before navigation
     if (isMobile) {
       setOpenMobile(false)
@@ -125,7 +127,11 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
     }
   }
 
-  const navigateToQuery = (targetUrl: string, chatPath: string, queryId: string) => {
+  const navigateToQuery = (
+    targetUrl: string,
+    chatPath: string,
+    queryId: string
+  ) => {
     if (pathname !== chatPath) {
       // Navigate to different chat page with hash, preserving SPA behavior
       router.push(targetUrl, { scroll: false })
@@ -140,8 +146,8 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
     const targetId = `section-${queryId}`
     const element = document.getElementById(targetId)
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
+      element.scrollIntoView({
+        behavior: 'smooth',
         block: 'start'
       })
       // Optional: Add a brief highlight effect
@@ -159,7 +165,9 @@ export function ChatQueryHistory({ chatId, isExpanded }: ChatQueryHistoryProps) 
       {isLoading ? (
         <div className="flex items-center justify-center py-2 pl-2">
           <Spinner className="size-3" />
-          <span className="ml-2 text-xs text-muted-foreground">Loading queries...</span>
+          <span className="ml-2 text-xs text-muted-foreground">
+            Loading queries...
+          </span>
         </div>
       ) : queries.length > 0 ? (
         <SidebarMenu>

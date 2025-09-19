@@ -25,7 +25,9 @@ export async function GET(
     }
 
     // Basic API logging for monitoring
-    console.log(`[API] Returning chat ${chatId} with ${chat.messages?.length || 0} messages`)
+    console.log(
+      `[API] Returning chat ${chatId} with ${chat.messages?.length || 0} messages`
+    )
 
     return NextResponse.json(chat)
   } catch (error) {

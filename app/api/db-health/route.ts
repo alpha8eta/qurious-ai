@@ -8,8 +8,8 @@ export const runtime = 'nodejs'
 export async function GET() {
   try {
     const r = await pg.query('select now() as now')
-    return NextResponse.json({ 
-      ok: true, 
+    return NextResponse.json({
+      ok: true,
       now: r.rows[0].now,
       connectionInfo: {
         totalConnections: pg.totalCount,
@@ -20,11 +20,11 @@ export async function GET() {
   } catch (e: any) {
     console.error('DB health failed:', e)
     return NextResponse.json(
-      { 
-        ok: false, 
-        code: e?.code, 
-        errno: e?.errno, 
-        message: e?.message 
+      {
+        ok: false,
+        code: e?.code,
+        errno: e?.errno,
+        message: e?.message
       },
       { status: 500 }
     )
