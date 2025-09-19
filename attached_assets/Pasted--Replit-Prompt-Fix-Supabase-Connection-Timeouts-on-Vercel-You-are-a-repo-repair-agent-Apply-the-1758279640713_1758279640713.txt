@@ -1,0 +1,141 @@
+🔧 Replit Prompt: Fix Supabase Connection Timeouts on Vercel
+
+You are a repo repair agent. Apply the following changes to stabilize database connections, remove fragile transactions, and add health checks. After patching, re-run bun run build and verify /api/db-health works in production.
+
+Problem
+
+Logs show:
+
+API route error fetching chats: Connection terminated due to connection timeout
+[cause]: [Error: Connection terminated unexpectedly]
+
+
+Cause:
+
+Multiple connections created per request in serverless runtime.
+
+Using db.transaction in API routes → fragile on Vercel.
+
+Not enforcing Node.js runtime → defaults to Edge, where Postgres TCP is unstable.
+
+Fix Strategy
+
+Use singleton pg.Pool with pooled connection URL (:6543).
+
+Wrap with Drizzle ORM.
+
+Remove transactions in /api/chats and /api/chat.
+
+Add /api/db-health endpoint to verify connections.
+
+Mark all DB routes with export const runtime = "nodejs";.
+
+Migrations only run locally or via CI (never on Vercel runtime).
+
+File changes
+1) Create/replace lib/db/connection.ts
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+const globalForDb = globalThis as unknown as { pool?: Pool };
+
+export const pool =
+  globalForDb.pool ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL!, // pooled 6543 URL
+    max: 5,                     // keep below Supabase pooled max (15)
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+    keepAlive: true,
+    allowExitOnIdle: true,
+  });
+
+if (!globalForDb.pool) globalForDb.pool = pool;
+
+export const db = drizzle(pool);
+
+2) Refactor app/api/chats/route.ts
+export const runtime = 'nodejs';
+
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db/connection';
+import { chats } from '@/lib/db/schema';
+import { desc } from 'drizzle-orm';
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    const limit = Math.min(Number(url.searchParams.get('limit') ?? 20), 100);
+
+    const rows = await db
+      .select()
+      .from(chats)
+      .orderBy(desc(chats.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return NextResponse.json({ ok: true, data: rows });
+  } catch (e: any) {
+    console.error('GET /api/chats failed', e);
+    return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+  }
+}
+
+3) Refactor app/api/chat/route.ts
+
+At the very top:
+
+export const runtime = 'nodejs';
+
+
+Replace db.transaction(...) with direct db.insert/db.update calls. Do not hold open long-lived transactions.
+
+4) Add health check route app/api/db-health/route.ts
+export const runtime = 'nodejs';
+
+import { NextResponse } from 'next/server';
+import { pool } from '@/lib/db/connection';
+
+export async function GET() {
+  try {
+    const r = await pool.query('select now()');
+    return NextResponse.json({ ok: true, now: r.rows[0].now });
+  } catch (e: any) {
+    console.error('DB health failed:', e);
+    return NextResponse.json(
+      { ok: false, code: e.code, message: e.message },
+      { status: 500 }
+    );
+  }
+}
+
+5) Enforce Node runtime everywhere
+
+Every DB-touching file must include:
+
+export const runtime = 'nodejs';
+
+6) Migrations
+
+Do not run drizzle-kit migrate on Vercel.
+
+Instead, run locally or in GitHub Actions against the direct 5432 URL (DIRECT_DATABASE_URL).
+
+Verification steps
+
+bun run build → should succeed without connection errors.
+
+Deploy to Vercel.
+
+Hit /api/db-health → should return { ok: true, now: ... }.
+
+Hit /api/chats?offset=0&limit=20 → should return { ok: true, data: [...] } without 500.
+
+Deliverables
+
+Diffs of changed files.
+
+Confirmation build passes.
+
+Output of /api/db-health and /api/chats in production.

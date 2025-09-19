@@ -1,0 +1,84 @@
+🔧 Replit Prompt: Fix Next.js Dynamic Route Errors with Supabase
+
+You are a repo repair agent. Apply the following changes exactly. If a file doesn’t exist, create it. If Supabase auth calls are in layouts, not-found, or server components, move or guard them. After patching, re-run build and confirm bun run build passes.
+
+Problem
+
+Next.js build fails:
+
+Dynamic server usage: Route /_not-found couldn't be rendered statically because it used `cookies`
+
+
+Cause: cookies() or Supabase auth session calls are being used in layout.tsx or not-found.tsx. Next.js tries to statically render these routes, but cookies force them dynamic.
+
+Fix Strategy
+
+Mark auth-sensitive files as dynamic (export const dynamic = "force-dynamic";).
+
+Ensure not-found.tsx is pure UI only.
+
+Use Next.js’s notFound() API for redirects, not cookies logic inside not-found.
+
+Keep Supabase auth logic in layouts or server components but flagged dynamic.
+
+File changes
+1) app/layout.tsx
+
+At the very top:
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+
+If it uses Supabase auth (createServerComponentClient, cookies() etc.), leave it — but now flagged dynamic so build won’t break.
+
+2) app/not-found.tsx
+
+Remove any Supabase or cookie usage.
+
+Replace with static UI:
+
+export default function NotFound() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-3xl font-bold">Page Not Found</h1>
+      <p className="text-gray-600">The page you’re looking for doesn’t exist.</p>
+    </div>
+  );
+}
+
+
+If any Supabase/cookie calls exist, move them into a different page or wrap in layout.tsx (already forced dynamic).
+
+3) Other auth-sensitive server components
+
+Search for cookies() or supabase.auth inside app/api/ or app/*/page.tsx. If found at the top level, prepend:
+
+export const dynamic = "force-dynamic";
+
+4) Test build locally
+
+After applying:
+
+bun run build
+
+
+Should complete without Dynamic server usage errors.
+
+5) Verification
+
+Deploy on Vercel.
+
+Check /api/db-health still works.
+
+Check /api/chats doesn’t timeout.
+
+Visit a bogus URL → /not-found should render static UI, no auth errors.
+
+Deliverables
+
+Summary of changed files (diffs).
+
+Confirmation that bun run build passes.
+
+Confirmation that /not-found renders UI and build no longer fails on “Dynamic server usage”.

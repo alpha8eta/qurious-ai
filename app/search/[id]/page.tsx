@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { notFound, redirect } from 'next/navigation'
 
 import { UIMessage } from 'ai'

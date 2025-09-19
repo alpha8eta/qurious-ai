@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { Suspense } from 'react'
 import type { Metadata, Viewport } from 'next'
 import { Inter as FontSans } from 'next/font/google'
