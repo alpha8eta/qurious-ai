@@ -1,20 +1,20 @@
 import { NextResponse } from 'next/server'
 
-import { pg } from '@/lib/db/connection'
+import { pool } from '@/lib/db/connection'
 
 // Force Node.js runtime for database operations
 export const runtime = 'nodejs'
 
 export async function GET() {
   try {
-    const r = await pg.query('select now() as now')
+    const r = await pool.query('select now() as now')
     return NextResponse.json({
       ok: true,
       now: r.rows[0].now,
       connectionInfo: {
-        totalConnections: pg.totalCount,
-        idleConnections: pg.idleCount,
-        waitingConnections: pg.waitingCount
+        totalConnections: pool.totalCount,
+        idleConnections: pool.idleCount,
+        waitingConnections: pool.waitingCount
       }
     })
   } catch (e: any) {

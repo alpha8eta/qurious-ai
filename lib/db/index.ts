@@ -1,2 +1,2 @@
 // Re-export the optimized database connection
-export { db, pg, type Schema } from './connection'
+export { db, pool } from './connection'

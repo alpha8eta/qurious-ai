@@ -9,6 +9,9 @@ import {
   R2_PUBLIC_URL
 } from '@/lib/storage/r2-client'
 
+// Force Node.js runtime for file operations and authentication
+export const runtime = 'nodejs'
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
 
