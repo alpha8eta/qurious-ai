@@ -1,0 +1,88 @@
+2. Use a singleton pool
+
+lib/db/connection.ts:
+
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+
+const globalForDb = globalThis as unknown as { pool?: Pool };
+
+export const pool =
+  globalForDb.pool ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL!,
+    max: 5, // Supabase pooled max = 15
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+    keepAlive: true,
+    allowExitOnIdle: true,
+  });
+
+if (!globalForDb.pool) globalForDb.pool = pool;
+
+export const db = drizzle(pool);
+
+3. Simplify /api/chats
+export const runtime = "nodejs";
+
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db/connection";
+import { chats } from "@/lib/db/schema";
+import { desc } from "drizzle-orm";
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const offset = Number(url.searchParams.get("offset") ?? 0);
+    const limit = Math.min(Number(url.searchParams.get("limit") ?? 20), 100);
+
+    const rows = await db
+      .select()
+      .from(chats)
+      .orderBy(desc(chats.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return NextResponse.json({ ok: true, data: rows });
+  } catch (e: any) {
+    console.error("GET /api/chats failed", e);
+    return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+  }
+}
+
+4. Add a health check
+
+app/api/db-health/route.ts:
+
+export const runtime = "nodejs";
+
+import { NextResponse } from "next/server";
+import { pool } from "@/lib/db/connection";
+
+export async function GET() {
+  try {
+    const r = await pool.query("select now()");
+    return NextResponse.json({ ok: true, now: r.rows[0].now });
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, code: e.code, message: e.message },
+      { status: 500 }
+    );
+  }
+}
+
+What to Do Next
+
+Double-check that your Vercel DATABASE_URL uses port 6543, not 5432.
+
+Apply the singleton connection.ts fix.
+
+Refactor /api/chats to avoid transactions.
+
+Add /api/db-health.
+
+Redeploy.
+
+Curl /api/db-health — it should return { ok: true, now: ... }.
+
+Hit /api/chats?offset=0&limit=20 — it should return JSON, not 500.
