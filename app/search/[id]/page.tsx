@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 import { notFound, redirect } from 'next/navigation'
 

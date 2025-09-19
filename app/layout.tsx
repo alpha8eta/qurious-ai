@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 import { Suspense } from 'react'
 import type { Metadata, Viewport } from 'next'
